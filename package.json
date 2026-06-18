@@ -1,0 +1,19 @@
+{
+  "name": "deck-royale",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "nuxt": "^4.4.8",
+    "socket.io": "^4.8.3",
+    "socket.io-client": "^4.8.3",
+    "vue": "^3.5.35",
+    "vue-router": "^5.1.0"
+  }
+}
