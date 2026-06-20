@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Crown, Diamond, Heart, Club, Spade } from '@lucide/vue'
 import type { GameState } from '../../types/poker'
 
 const props = defineProps<{
@@ -48,7 +49,34 @@ const minRaise = computed(() => props.gameState.bigBlind)
     <!-- Table surface -->
     <div class="poker-table__surface">
       <div class="poker-table__felt">
-        <div class="poker-table__brand">DECK ROYALE</div>
+        <!-- Corner suit decorations -->
+        <div class="poker-table__suit-suites">
+          <Spade :size="28" class="poker-table__corner-icon poker-table__corner-icon--tl" />
+          <Heart :size="28" class="poker-table__corner-icon poker-table__corner-icon--tr" />
+          <Club :size="28" class="poker-table__corner-icon poker-table__corner-icon--bl" />
+          <Diamond :size="28" class="poker-table__corner-icon poker-table__corner-icon--br" />
+        </div>
+
+        <!-- Brand -->
+        <div class="poker-table__brand">
+          <div class="poker-table__brand-line">
+            <span class="poker-table__suit-inline"><Spade :size="12" /></span>
+            <span class="poker-table__suit-inline"><Heart :size="12" /></span>
+            <span class="poker-table__suit-inline"><Club :size="12" /></span>
+            <span class="poker-table__suit-inline"><Diamond :size="12" /></span>
+          </div>
+          <div class="poker-table__brand-title">
+            <Crown :size="18" class="poker-table__crown" />
+            DECK ROYALE
+          </div>
+          <div class="poker-table__brand-line">
+            <span class="poker-table__suit-inline"><Diamond :size="12" /></span>
+            <span class="poker-table__suit-inline"><Club :size="12" /></span>
+            <span class="poker-table__suit-inline"><Heart :size="12" /></span>
+            <span class="poker-table__suit-inline"><Spade :size="12" /></span>
+          </div>
+        </div>
+
         <GameCommunityCards :cards="gameState.communityCards" />
         <GamePotDisplay :amount="totalPot" />
         <div class="poker-table__phase">{{ gameState.phase.toUpperCase() }}</div>
@@ -82,78 +110,125 @@ const minRaise = computed(() => props.gameState.bigBlind)
 <style scoped>
 .poker-table {
   width: 100%;
-  min-height: 100vh;
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  padding: 20px;
+  padding: 12px 16px;
+  gap: 8px;
 }
 
 .poker-table__opponents {
   display: flex;
-  gap: 16px;
+  gap: 10px;
   flex-wrap: wrap;
   justify-content: center;
-  padding: 20px 0;
+  width: 100%;
 }
 
 .poker-table__surface {
   width: 90%;
-  max-width: 800px;
+  max-width: 700px;
+  flex-shrink: 1;
 }
 
 .poker-table__felt {
   width: 100%;
-  aspect-ratio: 2 / 1;
-  background: radial-gradient(ellipse at center, #1a5c2a 0%, #0d3d1a 70%, #0a2d12 100%);
-  border-radius: 200px;
-  border: 12px solid #5c3a1a;
+  aspect-ratio: 2.2 / 1;
+  background:
+    radial-gradient(ellipse at center, rgba(26, 92, 42, 0.9) 0%, rgba(13, 61, 26, 0.95) 50%, rgba(10, 45, 18, 1) 100%);
+  border-radius: 140px;
+  border: 6px solid #5c3a1a;
   box-shadow:
     inset 0 0 60px rgba(0, 0, 0, 0.5),
-    0 0 40px rgba(0, 0, 0, 0.8),
-    0 10px 30px rgba(0, 0, 0, 0.5);
+    inset 0 0 120px rgba(0, 0, 0, 0.2),
+    0 0 20px rgba(0, 0, 0, 0.6),
+    0 0 40px rgba(92, 58, 26, 0.3);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 16px;
-  padding: 30px;
+  gap: 8px;
+  padding: 24px;
   position: relative;
+  overflow: hidden;
 }
+
+.poker-table__suit-suites {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.poker-table__corner-icon {
+  position: absolute;
+  color: rgba(255, 215, 0, 0.04);
+}
+.poker-table__corner-icon--tl { top: 14px; left: 20px; }
+.poker-table__corner-icon--tr { top: 14px; right: 20px; }
+.poker-table__corner-icon--bl { bottom: 14px; left: 20px; }
+.poker-table__corner-icon--br { bottom: 14px; right: 20px; }
 
 .poker-table__brand {
   position: absolute;
-  top: 20px;
-  color: rgba(255, 215, 0, 0.25);
-  font-size: 20px;
-  font-weight: bold;
-  letter-spacing: 8px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  pointer-events: none;
+  user-select: none;
+}
+
+.poker-table__brand-title {
+  color: rgba(255, 215, 0, 0.07);
+  font-size: 60px;
+  font-weight: 700;
+  letter-spacing: 16px;
   font-family: 'Georgia', serif;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  text-shadow: 0 0 30px rgba(255, 215, 0, 0.04);
+}
+.poker-table__crown {
+  color: rgba(255, 215, 0, 0.08);
+  width: 50px;
+  height: 50px;
+}
+
+.poker-table__brand-line {
+  display: flex;
+  gap: 28px;
+}
+.poker-table__suit-inline {
+  color: rgba(255, 215, 0, 0.04);
 }
 
 .poker-table__phase {
   position: absolute;
-  bottom: 20px;
-  color: rgba(255, 255, 255, 0.35);
-  font-size: 12px;
-  letter-spacing: 2px;
+  bottom: 14px;
+  color: rgba(255, 255, 255, 0.25);
+  font-size: 9px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
 }
 
 .poker-table__my-area {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
-  padding: 20px;
-  background: rgba(0, 0, 0, 0.6);
-  border-radius: 16px;
-  backdrop-filter: blur(10px);
+  gap: 8px;
+  width: 100%;
 }
 
 .poker-table__my-info {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
 }
 </style>

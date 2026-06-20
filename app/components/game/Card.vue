@@ -55,34 +55,34 @@ const suitColor = computed(() => {
 
 <style scoped>
 .card {
-  width: 80px;
-  height: 112px;
-  border-radius: 8px;
+  width: 56px;
+  height: 78px;
+  border-radius: 6px;
   background: white;
-  border: 2px solid #333;
+  border: 1.5px solid #333;
   position: relative;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 6px;
+  padding: 4px;
   font-family: 'Arial', sans-serif;
   user-select: none;
   transition: transform 0.3s ease;
   flex-shrink: 0;
 }
-.card--small { width: 56px; height: 78px; padding: 4px; }
+.card--small { width: 40px; height: 56px; padding: 3px; }
 .card--face-down { background: linear-gradient(135deg, #1a1a5e, #2d2d8a); border-color: #444; }
 .card__corner { display: flex; flex-direction: column; align-items: center; line-height: 1; }
 .card__corner--bottom { transform: rotate(180deg); }
-.card__rank { font-size: 16px; font-weight: bold; }
-.card--small .card__rank { font-size: 12px; }
-.card__suit { font-size: 14px; }
-.card--small .card__suit { font-size: 10px; }
+.card__rank { font-size: 13px; font-weight: bold; }
+.card--small .card__rank { font-size: 10px; }
+.card__suit { font-size: 11px; }
+.card--small .card__suit { font-size: 8px; }
 .card__center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
-.card__suit-large { font-size: 32px; }
-.card--small .card__suit-large { font-size: 22px; }
+.card__suit-large { font-size: 22px; }
+.card--small .card__suit-large { font-size: 16px; }
 .card__back { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
-.card__back-text { color: #ffd700; font-size: 20px; font-weight: bold; font-family: 'Georgia', serif; }
-.card--small .card__back-text { font-size: 14px; }
+.card__back-text { color: #ffd700; font-size: 14px; font-weight: bold; font-family: 'Georgia', serif; }
+.card--small .card__back-text { font-size: 10px; }
 </style>

@@ -55,59 +55,52 @@ const chipColor = computed(() => {
 
 <style scoped>
 .player-seat {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  padding: 12px;
-  border-radius: 12px;
-  background: rgba(0, 0, 0, 0.5);
-  border: 2px solid transparent;
-  min-width: 100px;
-  transition: all 0.3s ease;
-  position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 8px; border-radius: 10px;
+  background: rgba(0, 0, 0, 0.6); border: 2px solid transparent;
+  min-width: 70px; max-width: 90px;
+  transition: all 0.3s ease; position: relative;
 }
-.player-seat--active { border-color: #ffd700; box-shadow: 0 0 15px rgba(255, 215, 0, 0.4); }
+.player-seat--active { border-color: #ffd700; box-shadow: 0 0 12px rgba(255, 215, 0, 0.4); }
 .player-seat--myself { background: rgba(0, 100, 0, 0.3); border-color: #00aa00; }
 .player-seat--folded { opacity: 0.5; }
-.player-seat--all-in { border-color: #ff4444; box-shadow: 0 0 15px rgba(255, 68, 68, 0.5); }
+.player-seat--all-in { border-color: #ff4444; box-shadow: 0 0 12px rgba(255, 68, 68, 0.5); }
 
 .player-seat__avatar {
-  width: 48px; height: 48px; border-radius: 50%;
+  width: 32px; height: 32px; border-radius: 50%;
   background: linear-gradient(135deg, #667eea, #764ba2);
-  display: flex; align-items: center; justify-content: center;
-  position: relative;
+  display: flex; align-items: center; justify-content: center; position: relative;
 }
-.player-seat__initial { color: white; font-size: 20px; font-weight: bold; }
+.player-seat__initial { color: white; font-size: 14px; font-weight: bold; }
 .player-seat__dealer {
-  position: absolute; bottom: -4px; right: -4px;
-  width: 20px; height: 20px; border-radius: 50%;
-  background: #ffd700; color: #000; font-size: 10px; font-weight: bold;
+  position: absolute; bottom: -3px; right: -3px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: #ffd700; color: #000; font-size: 8px; font-weight: bold;
   display: flex; align-items: center; justify-content: center;
 }
 
 .player-seat__info { text-align: center; }
-.player-seat__name { color: white; font-size: 14px; font-weight: 600; }
+.player-seat__name { color: white; font-size: 11px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80px; }
 .player-seat__chips {
-  color: #ffd700; font-size: 12px;
-  display: flex; align-items: center; gap: 4px;
+  color: #ffd700; font-size: 10px;
+  display: flex; align-items: center; gap: 3px; justify-content: center;
 }
 .player-seat__chip-icon {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 14px; height: 14px; border-radius: 50%;
-  color: white; font-size: 10px; font-weight: bold;
+  width: 12px; height: 12px; border-radius: 50%;
+  color: white; font-size: 8px; font-weight: bold;
 }
 
 .player-seat__bet {
-  position: absolute; top: -10px; right: -10px;
-  background: #ffd700; color: #000; padding: 4px 8px; border-radius: 12px;
-  font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 2px;
+  position: absolute; top: -8px; right: -8px;
+  background: #ffd700; color: #000; padding: 2px 6px; border-radius: 10px;
+  font-size: 10px; font-weight: bold; display: flex; align-items: center; gap: 2px;
 }
 
-.player-seat__status { color: #ff6666; font-size: 11px; font-weight: bold; text-transform: uppercase; }
-.player-seat__status--all-in { color: #ff4444; font-size: 14px; animation: pulse 1s infinite; }
-.player-seat__turn-indicator { color: #00ff00; font-size: 11px; font-weight: bold; animation: pulse 1s infinite; }
-.player-seat__disconnected { color: #666; font-size: 10px; font-style: italic; }
+.player-seat__status { color: #ff6666; font-size: 9px; font-weight: bold; text-transform: uppercase; }
+.player-seat__status--all-in { color: #ff4444; font-size: 11px; animation: pulse 1s infinite; }
+.player-seat__turn-indicator { color: #00ff00; font-size: 9px; font-weight: bold; animation: pulse 1s infinite; }
+.player-seat__disconnected { color: #666; font-size: 9px; font-style: italic; }
 
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 </style>
