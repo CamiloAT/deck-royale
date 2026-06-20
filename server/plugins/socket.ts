@@ -56,6 +56,25 @@ function setupSocketEvents(io: Server) {
       } catch (e: any) { callback({ error: e.message }) }
     })
 
+    socket.on('update-room', (data: any, callback: any) => {
+      try {
+        const roomId = socket.data.roomId
+        const playerId = socket.data.playerId
+        if (!roomId || !playerId) { callback({ error: 'No estas en una sala' }); return }
+        const room = getRoom(roomId)
+        if (!room) { callback({ error: 'Sala no encontrada' }); return }
+        if (room.players.length === 0 || room.players[0].id !== playerId) {
+          callback({ error: 'Solo el host puede modificar los ajustes' }); return
+        }
+        if (room.started) { callback({ error: 'La partida ya comenzó' }); return }
+        if (data.smallBlind !== undefined) room.smallBlind = Math.max(1, Number(data.smallBlind) || 10)
+        if (data.bigBlind !== undefined) room.bigBlind = Math.max(2, Number(data.bigBlind) || 20)
+        if (data.minBuyIn !== undefined) room.minBuyIn = Math.max(100, Number(data.minBuyIn) || 1000)
+        callback({ success: true })
+        io!.to(roomId).emit('room-update', room)
+      } catch (e: any) { callback({ error: e.message }) }
+    })
+
     socket.on('leave-room', () => {
       const { roomId, playerId } = socket.data
       if (roomId && playerId) {

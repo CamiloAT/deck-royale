@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const { state, connect, createRoom, joinRoom, leaveRoom, startGame, performAction } = useGame()
+const { state, connect, createRoom, joinRoom, leaveRoom, startGame, performAction, updateRoom } = useGame()
 
 connect()
 
@@ -39,6 +39,11 @@ function handleLeave() {
   leaveRoom()
   error.value = ''
 }
+
+async function handleUpdateSettings(data: any) {
+  const result = await updateRoom(data)
+  if ('error' in result) error.value = result.error
+}
 </script>
 
 <template>
@@ -61,6 +66,7 @@ function handleLeave() {
         :current-player-id="state.player?.id || ''"
         @start="handleStart"
         @leave="handleLeave"
+        @update-settings="handleUpdateSettings"
       />
     </template>
 

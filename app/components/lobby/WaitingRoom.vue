@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Copy, Check, Spade, Heart, Diamond, Club, Play, LogOut, Users, Settings, Link, QrCode } from '@lucide/vue'
+import { Copy, Check, Spade, Heart, Diamond, Club, Play, LogOut, Users, Coins, Banknote, Wallet, Pencil, Link, QrCode } from '@lucide/vue'
 import QrcodeVue from 'qrcode.vue'
 import type { Room } from '../../types/poker'
 
@@ -11,6 +11,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'start'): void
   (e: 'leave'): void
+  (e: 'update-settings', data: { smallBlind?: number; bigBlind?: number; minBuyIn?: number }): void
 }>()
 
 const isHost = computed(() =>
@@ -22,6 +23,26 @@ const canStart = computed(() => props.room.players.length >= 2)
 const copied = ref(false)
 const linkCopied = ref(false)
 const showQr = ref(false)
+
+const editingField = ref<'smallBlind' | 'bigBlind' | 'minBuyIn' | null>(null)
+const editValue = ref(0)
+
+function startEdit(field: 'smallBlind' | 'bigBlind' | 'minBuyIn', currentValue: number) {
+  editingField.value = field
+  editValue.value = currentValue
+}
+
+function saveEdit() {
+  if (!editingField.value) return
+  const data: Record<string, number> = {}
+  data[editingField.value] = editValue.value
+  emit('update-settings', data)
+  editingField.value = null
+}
+
+function cancelEdit() {
+  editingField.value = null
+}
 
 const shareLink = computed(() =>
   typeof window !== 'undefined'
@@ -125,16 +146,73 @@ const particles = Array.from({ length: 18 }, (_, i) => {
 
       <div class="waiting-room__info">
         <div class="waiting-room__detail">
-          <span class="waiting-room__detail-label"><Settings :size="14" /> Small Blind</span>
-          <span>${{ room.smallBlind }}</span>
+          <span class="waiting-room__detail-label"><Coins :size="14" /> Small Blind</span>
+          <template v-if="isHost && editingField === 'smallBlind'">
+            <input
+              v-model.number="editValue"
+              type="number"
+              class="waiting-room__edit-input"
+              min="1"
+              autofocus
+              @keyup.enter="saveEdit"
+              @keyup.escape="cancelEdit"
+              @blur="saveEdit"
+            />
+          </template>
+          <template v-else>
+            <span class="waiting-room__detail-value">
+              ${{ room.smallBlind }}
+              <button v-if="isHost" class="waiting-room__edit-btn" @click="startEdit('smallBlind', room.smallBlind)">
+                <Pencil :size="12" />
+              </button>
+            </span>
+          </template>
         </div>
         <div class="waiting-room__detail">
-          <span class="waiting-room__detail-label"><Settings :size="14" /> Big Blind</span>
-          <span>${{ room.bigBlind }}</span>
+          <span class="waiting-room__detail-label"><Banknote :size="14" /> Big Blind</span>
+          <template v-if="isHost && editingField === 'bigBlind'">
+            <input
+              v-model.number="editValue"
+              type="number"
+              class="waiting-room__edit-input"
+              min="2"
+              autofocus
+              @keyup.enter="saveEdit"
+              @keyup.escape="cancelEdit"
+              @blur="saveEdit"
+            />
+          </template>
+          <template v-else>
+            <span class="waiting-room__detail-value">
+              ${{ room.bigBlind }}
+              <button v-if="isHost" class="waiting-room__edit-btn" @click="startEdit('bigBlind', room.bigBlind)">
+                <Pencil :size="12" />
+              </button>
+            </span>
+          </template>
         </div>
         <div class="waiting-room__detail">
-          <span class="waiting-room__detail-label"><Settings :size="14" /> Buy-In</span>
-          <span>${{ room.minBuyIn.toLocaleString() }}</span>
+          <span class="waiting-room__detail-label"><Wallet :size="14" /> Buy-In</span>
+          <template v-if="isHost && editingField === 'minBuyIn'">
+            <input
+              v-model.number="editValue"
+              type="number"
+              class="waiting-room__edit-input"
+              min="100"
+              autofocus
+              @keyup.enter="saveEdit"
+              @keyup.escape="cancelEdit"
+              @blur="saveEdit"
+            />
+          </template>
+          <template v-else>
+            <span class="waiting-room__detail-value">
+              ${{ room.minBuyIn.toLocaleString() }}
+              <button v-if="isHost" class="waiting-room__edit-btn" @click="startEdit('minBuyIn', room.minBuyIn)">
+                <Pencil :size="12" />
+              </button>
+            </span>
+          </template>
         </div>
       </div>
 
@@ -342,6 +420,43 @@ const particles = Array.from({ length: 18 }, (_, i) => {
   letter-spacing: 1px;
 }
 .waiting-room__detail span:last-child { color: white; font-weight: 600; }
+.waiting-room__detail-value {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: white;
+  font-weight: 600;
+}
+.waiting-room__edit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+.waiting-room__edit-btn:hover { color: #ffd700; background: rgba(255, 215, 0, 0.1); }
+.waiting-room__edit-input {
+  width: 80px;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  border-radius: 6px;
+  color: #ffd700;
+  font-size: 14px;
+  font-weight: 600;
+  outline: none;
+  text-align: right;
+  font-family: inherit;
+}
+.waiting-room__edit-input:focus {
+  border-color: rgba(255, 215, 0, 0.7);
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.15);
+}
 
 /* ── Jugadores ── */
 .waiting-room__players {

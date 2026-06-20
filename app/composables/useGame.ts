@@ -136,6 +136,14 @@ export function useGame() {
     })
   }
 
+  function updateRoom(settings: { smallBlind?: number; bigBlind?: number; minBuyIn?: number }): Promise<{ success: boolean } | { error: string }> {
+    return new Promise((resolve) => {
+      socket.emit('update-room', settings, (response: any) => {
+        resolve(response)
+      })
+    })
+  }
+
   return {
     state: readonly(state),
     connect,
@@ -145,5 +153,6 @@ export function useGame() {
     startGame,
     performAction,
     requestGameState,
+    updateRoom,
   }
 }
