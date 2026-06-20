@@ -69,7 +69,7 @@ function handleLeave() { leaveRoom(); joined.value = false; error.value = '' }
             <input v-model="nickname" type="text" placeholder="Tu nickname" class="lobby__input" maxlength="15" />
             <div class="lobby__field">
               <label>Buy-In (fichas)</label>
-              <input v-model.number="buyIn" type="number" class="lobby__input" min="100" />
+              <SharedNumberInput v-model="buyIn" :min="100" :step="500" />
             </div>
             <button class="lobby__btn lobby__btn--primary" @click="handleJoin" :disabled="!nickname || loading">
               {{ loading ? 'Uniendo...' : 'Unirse' }}

@@ -139,16 +139,16 @@ const particles = Array.from({ length: 18 }, (_, i) => {
           <div class="lobby__row">
             <div class="lobby__field">
               <label>Small Blind</label>
-              <input v-model.number="smallBlind" type="number" class="lobby__input" min="1" />
+              <SharedNumberInput v-model="smallBlind" :min="1" :step="5" />
             </div>
             <div class="lobby__field">
               <label>Big Blind</label>
-              <input v-model.number="bigBlind" type="number" class="lobby__input" min="2" />
+              <SharedNumberInput v-model="bigBlind" :min="2" :step="10" />
             </div>
           </div>
           <div class="lobby__field">
             <label>Buy-In (fichas)</label>
-            <input v-model.number="buyIn" type="number" class="lobby__input" min="100" />
+            <SharedNumberInput v-model="buyIn" :min="100" :step="500" />
           </div>
           <button class="lobby__btn lobby__btn--primary" @click="handleCreate">
             <Plus :size="18" />
@@ -371,6 +371,7 @@ const particles = Array.from({ length: 18 }, (_, i) => {
 
 .lobby__row { display: flex; gap: 12px; }
 .lobby__field { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+.lobby__row .lobby__field { max-width: 163px; }
 .lobby__field label {
   color: #777;
   font-size: 11px;

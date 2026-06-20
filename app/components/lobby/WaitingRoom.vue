@@ -148,16 +148,10 @@ const particles = Array.from({ length: 18 }, (_, i) => {
         <div class="waiting-room__detail">
           <span class="waiting-room__detail-label"><Coins :size="14" /> Small Blind</span>
           <template v-if="isHost && editingField === 'smallBlind'">
-            <input
-              v-model.number="editValue"
-              type="number"
-              class="waiting-room__edit-input"
-              min="1"
-              autofocus
-              @keyup.enter="saveEdit"
-              @keyup.escape="cancelEdit"
-              @blur="saveEdit"
-            />
+            <div class="waiting-room__edit-group">
+              <SharedNumberInput v-model="editValue" :min="1" :step="5" />
+              <button class="waiting-room__edit-save" @click="saveEdit"><Check :size="14" /></button>
+            </div>
           </template>
           <template v-else>
             <span class="waiting-room__detail-value">
@@ -171,16 +165,10 @@ const particles = Array.from({ length: 18 }, (_, i) => {
         <div class="waiting-room__detail">
           <span class="waiting-room__detail-label"><Banknote :size="14" /> Big Blind</span>
           <template v-if="isHost && editingField === 'bigBlind'">
-            <input
-              v-model.number="editValue"
-              type="number"
-              class="waiting-room__edit-input"
-              min="2"
-              autofocus
-              @keyup.enter="saveEdit"
-              @keyup.escape="cancelEdit"
-              @blur="saveEdit"
-            />
+            <div class="waiting-room__edit-group">
+              <SharedNumberInput v-model="editValue" :min="2" :step="10" />
+              <button class="waiting-room__edit-save" @click="saveEdit"><Check :size="14" /></button>
+            </div>
           </template>
           <template v-else>
             <span class="waiting-room__detail-value">
@@ -194,16 +182,10 @@ const particles = Array.from({ length: 18 }, (_, i) => {
         <div class="waiting-room__detail">
           <span class="waiting-room__detail-label"><Wallet :size="14" /> Buy-In</span>
           <template v-if="isHost && editingField === 'minBuyIn'">
-            <input
-              v-model.number="editValue"
-              type="number"
-              class="waiting-room__edit-input"
-              min="100"
-              autofocus
-              @keyup.enter="saveEdit"
-              @keyup.escape="cancelEdit"
-              @blur="saveEdit"
-            />
+            <div class="waiting-room__edit-group">
+              <SharedNumberInput v-model="editValue" :min="100" :step="500" />
+              <button class="waiting-room__edit-save" @click="saveEdit"><Check :size="14" /></button>
+            </div>
           </template>
           <template v-else>
             <span class="waiting-room__detail-value">
@@ -440,22 +422,29 @@ const particles = Array.from({ length: 18 }, (_, i) => {
   transition: all 0.2s;
 }
 .waiting-room__edit-btn:hover { color: #ffd700; background: rgba(255, 215, 0, 0.1); }
-.waiting-room__edit-input {
-  width: 80px;
-  padding: 4px 8px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 215, 0, 0.4);
-  border-radius: 6px;
-  color: #ffd700;
-  font-size: 14px;
-  font-weight: 600;
-  outline: none;
-  text-align: right;
-  font-family: inherit;
+.waiting-room__edit-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 140px;
 }
-.waiting-room__edit-input:focus {
-  border-color: rgba(255, 215, 0, 0.7);
-  box-shadow: 0 0 12px rgba(255, 215, 0, 0.15);
+.waiting-room__edit-save {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: rgba(0, 204, 0, 0.15);
+  border: 1px solid rgba(0, 204, 0, 0.3);
+  border-radius: 5px;
+  color: #00cc00;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.waiting-room__edit-save:hover {
+  background: rgba(0, 204, 0, 0.25);
+  border-color: rgba(0, 204, 0, 0.5);
 }
 
 /* ── Jugadores ── */
