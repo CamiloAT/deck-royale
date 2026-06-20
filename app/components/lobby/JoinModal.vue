@@ -161,25 +161,23 @@ const particles = Array.from({ length: 18 }, (_, i) => {
         </template>
 
         <template v-else-if="mode === 'join'">
-          <div class="lobby__input-group">
-            <input
-              v-model="roomId"
-              type="text"
-              placeholder="Código de la sala"
-              class="lobby__input lobby__input--code"
-              maxlength="6"
-              :readonly="!!route.query.room"
-              @keyup.enter="handleJoin"
-            />
-            <span class="lobby__input-icon"><Key :size="16" /></span>
-          </div>
-          <div v-if="route.query.room" class="lobby__join-hint">
-            Entrarás a la sala <strong>{{ roomId }}</strong>
-          </div>
-          <div class="lobby__field">
-            <label>Buy-In (fichas)</label>
-            <input v-model.number="buyIn" type="number" class="lobby__input" min="100" />
-          </div>
+          <template v-if="route.query.room">
+            <div class="lobby__join-header">Te unirás a la sala</div>
+            <div class="lobby__join-code">{{ roomId }}</div>
+          </template>
+          <template v-else>
+            <div class="lobby__input-group">
+              <input
+                v-model="roomId"
+                type="text"
+                placeholder="Código de la sala"
+                class="lobby__input lobby__input--code"
+                maxlength="6"
+                @keyup.enter="handleJoin"
+              />
+              <span class="lobby__input-icon"><Key :size="16" /></span>
+            </div>
+          </template>
           <button class="lobby__btn lobby__btn--primary" @click="handleJoin" :disabled="!roomId">
             <ArrowRight :size="18" />
             Unirse
@@ -349,15 +347,26 @@ const particles = Array.from({ length: 18 }, (_, i) => {
   cursor: default;
 }
 
-.lobby__join-hint {
+.lobby__join-header {
   text-align: center;
   color: #666;
   font-size: 13px;
-  animation: fadeIn 0.4s ease-out;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 4px;
 }
-.lobby__join-hint strong {
+.lobby__join-code {
+  text-align: center;
   color: #ffd700;
   font-family: monospace;
+  font-size: 28px;
+  font-weight: bold;
+  letter-spacing: 6px;
+  padding: 16px;
+  background: rgba(255, 215, 0, 0.06);
+  border: 1px solid rgba(255, 215, 0, 0.15);
+  border-radius: 10px;
+  margin-bottom: 8px;
 }
 
 .lobby__row { display: flex; gap: 12px; }
