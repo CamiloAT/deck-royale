@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Copy, Check } from '@lucide/vue'
 import type { Room } from '../../types/poker'
 
 const props = defineProps<{
@@ -17,8 +18,23 @@ const isHost = computed(() =>
 
 const canStart = computed(() => props.room.players.length >= 2)
 
-function copyCode() {
-  navigator.clipboard.writeText(props.room.id)
+const copied = ref(false)
+
+async function copyCode() {
+  try {
+    await navigator.clipboard.writeText(props.room.id)
+    copied.value = true
+    setTimeout(() => { copied.value = false }, 2000)
+  } catch {
+    const input = document.createElement('input')
+    input.value = props.room.id
+    document.body.appendChild(input)
+    input.select()
+    document.execCommand('copy')
+    document.body.removeChild(input)
+    copied.value = true
+    setTimeout(() => { copied.value = false }, 2000)
+  }
 }
 </script>
 
@@ -30,7 +46,10 @@ function copyCode() {
         <div class="waiting-room__code" @click="copyCode" title="Copiar codigo">
           <span class="waiting-room__code-label">Codigo:</span>
           <span class="waiting-room__code-value">{{ room.id }}</span>
-          <span class="waiting-room__copy">📋</span>
+          <span class="waiting-room__copy">
+            <Check v-if="copied" :size="16" class="waiting-room__copy-icon waiting-room__copy-icon--check" />
+            <Copy v-else :size="16" class="waiting-room__copy-icon" />
+          </span>
         </div>
       </div>
 
@@ -100,8 +119,10 @@ function copyCode() {
 }
 .waiting-room__code:hover { background: rgba(255, 255, 255, 0.05); }
 .waiting-room__code-label { color: #888; font-size: 14px; }
-.waiting-room__code-value { color: #ffd700; font-size: 28px; font-weight: bold; letter-spacing: 4px; font-family: monospace; }
-.waiting-room__copy { font-size: 16px; }
+.waiting-room__code-value { color: #ffd700; font-size: 22px; font-weight: bold; letter-spacing: 4px; font-family: monospace; }
+.waiting-room__copy { display: flex; align-items: center; }
+.waiting-room__copy-icon { color: #888; transition: color 0.2s; }
+.waiting-room__copy-icon--check { color: #00cc00; }
 
 .waiting-room__info { background: rgba(255, 255, 255, 0.05); border-radius: 8px; padding: 16px; margin-bottom: 24px; }
 .waiting-room__detail { display: flex; justify-content: space-between; color: #aaa; font-size: 14px; padding: 6px 0; }
