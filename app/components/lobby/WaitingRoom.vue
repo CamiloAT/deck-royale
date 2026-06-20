@@ -149,7 +149,7 @@ const particles = Array.from({ length: 18 }, (_, i) => {
           <span class="waiting-room__detail-label"><Coins :size="14" /> Small Blind</span>
           <template v-if="isHost && editingField === 'smallBlind'">
             <div class="waiting-room__edit-group">
-              <SharedNumberInput v-model="editValue" :min="1" :step="5" />
+              <SharedNumberInput v-model="editValue" :min="50" :step="50" />
               <button class="waiting-room__edit-save" @click="saveEdit"><Check :size="14" /></button>
             </div>
           </template>
@@ -166,7 +166,7 @@ const particles = Array.from({ length: 18 }, (_, i) => {
           <span class="waiting-room__detail-label"><Banknote :size="14" /> Big Blind</span>
           <template v-if="isHost && editingField === 'bigBlind'">
             <div class="waiting-room__edit-group">
-              <SharedNumberInput v-model="editValue" :min="2" :step="10" />
+              <SharedNumberInput v-model="editValue" :min="100" :step="100" />
               <button class="waiting-room__edit-save" @click="saveEdit"><Check :size="14" /></button>
             </div>
           </template>
@@ -183,7 +183,7 @@ const particles = Array.from({ length: 18 }, (_, i) => {
           <span class="waiting-room__detail-label"><Wallet :size="14" /> Buy-In</span>
           <template v-if="isHost && editingField === 'minBuyIn'">
             <div class="waiting-room__edit-group">
-              <SharedNumberInput v-model="editValue" :min="100" :step="500" />
+              <SharedNumberInput v-model="editValue" :min="500" :step="1000" />
               <button class="waiting-room__edit-save" @click="saveEdit"><Check :size="14" /></button>
             </div>
           </template>

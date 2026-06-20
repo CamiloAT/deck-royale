@@ -18,9 +18,9 @@ const mode = ref<'menu' | 'create' | 'join'>('menu')
 const nickname = ref('')
 const roomName = ref('')
 const roomId = ref('')
-const buyIn = ref(1000)
-const smallBlind = ref(10)
-const bigBlind = ref(20)
+const buyIn = ref(2000)
+const smallBlind = ref(100)
+const bigBlind = ref(200)
 
 onMounted(() => {
   const roomParam = route.query.room
@@ -139,16 +139,16 @@ const particles = Array.from({ length: 18 }, (_, i) => {
           <div class="lobby__row">
             <div class="lobby__field">
               <label>Small Blind</label>
-              <SharedNumberInput v-model="smallBlind" :min="1" :step="5" />
+              <SharedNumberInput v-model="smallBlind" :min="50" :step="50" />
             </div>
             <div class="lobby__field">
               <label>Big Blind</label>
-              <SharedNumberInput v-model="bigBlind" :min="2" :step="10" />
+              <SharedNumberInput v-model="bigBlind" :min="100" :step="100" />
             </div>
           </div>
           <div class="lobby__field">
-            <label>Buy-In (fichas)</label>
-            <SharedNumberInput v-model="buyIn" :min="100" :step="500" />
+            <label>Buy-In (COP)</label>
+            <SharedNumberInput v-model="buyIn" :min="500" :step="1000" />
           </div>
           <button class="lobby__btn lobby__btn--primary" @click="handleCreate">
             <Plus :size="18" />

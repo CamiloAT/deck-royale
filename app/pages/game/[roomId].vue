@@ -7,7 +7,7 @@ const { state, connect, joinRoom, leaveRoom, startGame, performAction } = useGam
 connect()
 
 const nickname = ref('')
-const buyIn = ref(1000)
+const buyIn = ref(2000)
 const joined = ref(false)
 const error = ref('')
 const loading = ref(false)
@@ -68,8 +68,8 @@ function handleLeave() { leaveRoom(); joined.value = false; error.value = '' }
           <div class="lobby__form">
             <input v-model="nickname" type="text" placeholder="Tu nickname" class="lobby__input" maxlength="15" />
             <div class="lobby__field">
-              <label>Buy-In (fichas)</label>
-              <SharedNumberInput v-model="buyIn" :min="100" :step="500" />
+              <label>Buy-In (COP)</label>
+              <SharedNumberInput v-model="buyIn" :min="500" :step="1000" />
             </div>
             <button class="lobby__btn lobby__btn--primary" @click="handleJoin" :disabled="!nickname || loading">
               {{ loading ? 'Uniendo...' : 'Unirse' }}

@@ -29,12 +29,12 @@ function setupSocketEvents(io: Server) {
       try {
         const room = createRoom({
           name: data.roomName || 'Sala de Deck Royale',
-          smallBlind: data.smallBlind || 10,
-          bigBlind: data.bigBlind || 20,
-          minBuyIn: data.buyIn || 1000,
-          maxBuyIn: data.buyIn || 1000,
+          smallBlind: data.smallBlind || 100,
+          bigBlind: data.bigBlind || 200,
+          minBuyIn: data.buyIn || 2000,
+          maxBuyIn: data.buyIn || 2000,
         })
-        const result = joinRoom(room.id, data.nickname, data.buyIn || 1000)
+        const result = joinRoom(room.id, data.nickname, data.buyIn || 2000)
         if ('error' in result) { callback({ error: result.error }); return }
         socket.join(room.id)
         socket.data.roomId = room.id
@@ -46,7 +46,7 @@ function setupSocketEvents(io: Server) {
 
     socket.on('join-room', (data: any, callback: any) => {
       try {
-        const result = joinRoom(data.roomId, data.nickname, data.buyIn || 1000)
+        const result = joinRoom(data.roomId, data.nickname, data.buyIn || 2000)
         if ('error' in result) { callback({ error: result.error }); return }
         socket.join(data.roomId)
         socket.data.roomId = data.roomId
@@ -67,9 +67,9 @@ function setupSocketEvents(io: Server) {
           callback({ error: 'Solo el host puede modificar los ajustes' }); return
         }
         if (room.started) { callback({ error: 'La partida ya comenzó' }); return }
-        if (data.smallBlind !== undefined) room.smallBlind = Math.max(1, Number(data.smallBlind) || 10)
-        if (data.bigBlind !== undefined) room.bigBlind = Math.max(2, Number(data.bigBlind) || 20)
-        if (data.minBuyIn !== undefined) room.minBuyIn = Math.max(100, Number(data.minBuyIn) || 1000)
+        if (data.smallBlind !== undefined) room.smallBlind = Math.max(50, Number(data.smallBlind) || 100)
+        if (data.bigBlind !== undefined) room.bigBlind = Math.max(100, Number(data.bigBlind) || 200)
+        if (data.minBuyIn !== undefined) room.minBuyIn = Math.max(500, Number(data.minBuyIn) || 2000)
         callback({ success: true })
         io!.to(roomId).emit('room-update', room)
       } catch (e: any) { callback({ error: e.message }) }

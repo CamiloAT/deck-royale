@@ -9,10 +9,10 @@ const props = defineProps<{
 
 const chipColor = computed(() => {
   const chips = props.player.chips
-  if (chips >= 1000) return '#ffd700'
-  if (chips >= 500) return '#000'
-  if (chips >= 100) return '#0066cc'
-  if (chips >= 25) return '#00aa00'
+  if (chips >= 2000) return '#ffd700'
+  if (chips >= 1000) return '#000'
+  if (chips >= 500) return '#0066cc'
+  if (chips >= 100) return '#00aa00'
   return '#cc0000'
 })
 </script>
