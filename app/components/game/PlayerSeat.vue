@@ -27,10 +27,7 @@ const chipColor = computed(() => {
       'player-seat--all-in': player.allIn,
     }"
   >
-    <div class="player-seat__avatar">
-      <span class="player-seat__initial">{{ player.nickname.charAt(0).toUpperCase() }}</span>
-      <div v-if="player.isDealer" class="player-seat__dealer">D</div>
-    </div>
+    <GamePlayerAvatar :player="player" :is-myself="isMyself" />
 
     <div class="player-seat__info">
       <div class="player-seat__name">{{ player.nickname }}</div>
@@ -65,19 +62,6 @@ const chipColor = computed(() => {
 .player-seat--myself { background: rgba(0, 100, 0, 0.3); border-color: #00aa00; }
 .player-seat--folded { opacity: 0.5; }
 .player-seat--all-in { border-color: #ff4444; box-shadow: 0 0 12px rgba(255, 68, 68, 0.5); }
-
-.player-seat__avatar {
-  width: 32px; height: 32px; border-radius: 50%;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  display: flex; align-items: center; justify-content: center; position: relative;
-}
-.player-seat__initial { color: white; font-size: 14px; font-weight: bold; }
-.player-seat__dealer {
-  position: absolute; bottom: -3px; right: -3px;
-  width: 16px; height: 16px; border-radius: 50%;
-  background: #ffd700; color: #000; font-size: 8px; font-weight: bold;
-  display: flex; align-items: center; justify-content: center;
-}
 
 .player-seat__info { text-align: center; }
 .player-seat__name { color: white; font-size: 11px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80px; }
