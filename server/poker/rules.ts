@@ -48,8 +48,8 @@ export function getMinRaise(players: Player[], currentBet: number, bigBlind: num
   if (activePlayers.length === 0) return bigBlind
 
   const maxBet = Math.max(...activePlayers.map(p => p.bet))
-  const minRaise = Math.max(currentBet - maxBet + bigBlind, bigBlind)
-  return minRaise
+  const lastRaise = currentBet - maxBet
+  return Math.max(lastRaise, 1)
 }
 
 export function getCallAmount(player: Player, currentBet: number): number {

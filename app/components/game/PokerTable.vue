@@ -32,7 +32,7 @@ const canCheck = computed(() => {
   return myPlayer.value.bet >= props.gameState.currentBet
 })
 
-const minRaise = computed(() => props.gameState.bigBlind)
+const minRaise = computed(() => 1)
 
 const currentTurnPlayer = computed(() =>
   props.gameState.players.find(p => p.isTurn)

@@ -7,7 +7,6 @@ import {
   dealCommunityCards,
   getActivePlayers,
   getPlayersWhoCanAct,
-  getMinRaise,
   getCallAmount,
   calculatePots,
   nextActivePlayer,
@@ -231,11 +230,8 @@ export function performAction(
     case 'raise': {
       if (!amount) return { error: 'Debes especificar el monto' }
 
-      const minRaise = getMinRaise(updatedPlayers, game.currentBet, game.bigBlind)
-      const totalBetNeeded = game.currentBet + minRaise
-
-      if (amount < totalBetNeeded && amount < player.chips + player.bet) {
-        return { error: `Raise mínimo es ${totalBetNeeded}` }
+      if (amount <= game.currentBet && amount < player.chips + player.bet) {
+        return { error: `Debes subir a más de $${game.currentBet}` }
       }
 
       const raiseAmount = Math.min(amount - player.bet, player.chips)

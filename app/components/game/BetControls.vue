@@ -14,25 +14,93 @@ const emit = defineEmits<{
   (e: 'action', action: string, amount?: number): void
 }>()
 
-const raiseAmount = ref(props.currentBet + props.minRaise)
+const DENOMINATIONS = [
+  { value: 50, color: '#f97316', darkColor: '#9a3412', label: '50' },
+  { value: 100, color: '#ef4444', darkColor: '#991b1b', label: '100' },
+  { value: 200, color: '#3b82f6', darkColor: '#1e3a8a', label: '200' },
+  { value: 500, color: '#22c55e', darkColor: '#166534', label: '500' },
+  { value: 1000, color: '#a855f7', darkColor: '#6b21a8', label: '1K' },
+  { value: 2000, color: '#0ea5e9', darkColor: '#0c4a6e', label: '2K' },
+]
+
+const chipsSelected = ref<Record<number, number>>({
+  50: 0,
+  100: 0,
+  200: 0,
+  500: 0,
+  1000: 0,
+  2000: 0,
+})
+
+// chipsSum = additional amount player puts in on top of what they already bet
+const chipsSum = computed(() => {
+  return Object.entries(chipsSelected.value).reduce(
+    (sum, [val, count]) => sum + Number(val) * count,
+    0,
+  )
+})
 
 const callAmount = computed(() => {
   return Math.min(props.currentBet - props.playerBet, props.playerChips)
 })
 
-const maxRaise = computed(() => props.playerChips + props.playerBet)
-const minRaiseVal = computed(() => props.currentBet + props.minRaise)
+const maxTotalBet = computed(() => props.playerBet + props.playerChips)
+
+// chipsSum must be > 0 and cover at least the call
+const canRaise = computed(() =>
+  chipsSum.value > 0 &&
+  chipsSum.value >= callAmount.value &&
+  props.playerBet + chipsSum.value <= maxTotalBet.value,
+)
+
+// Is the raise amount above the call?
+const isRaiseAboveCall = computed(() => chipsSum.value > callAmount.value)
+const raiseAmount = computed(() => Math.max(0, chipsSum.value - callAmount.value))
+
+function chipCount(val: number): number {
+  return chipsSelected.value[val] ?? 0
+}
+
+function isChipDisabled(val: number): boolean {
+  if (props.disabled) return true
+  if (chipsSum.value + val > maxTotalBet.value) return true
+  return false
+}
+
+function addChip(val: number) {
+  if (isChipDisabled(val)) return
+  chipsSelected.value[val] = (chipsSelected.value[val] ?? 0) + 1
+}
+
+function removeChip(val: number) {
+  if ((chipsSelected.value[val] ?? 0) > 0) {
+    chipsSelected.value[val] = (chipsSelected.value[val] ?? 0) - 1
+  }
+}
 
 function handleRaise() {
-  emit('action', 'raise', raiseAmount.value)
+  if (!canRaise.value) return
+  if (!isRaiseAboveCall.value) {
+    emit('action', 'call')
+  } else {
+    emit('action', 'raise', props.playerBet + chipsSum.value)
+  }
 }
 
 function handleAllIn() {
   emit('action', 'all_in')
 }
 
-watch(() => props.currentBet, (val) => {
-  raiseAmount.value = val + props.minRaise
+function handleCheckCall() {
+  emit('action', props.canCheck ? 'check' : 'call')
+}
+
+watch(() => props.currentBet, () => {
+  chipsSelected.value = { 50: 0, 100: 0, 200: 0, 500: 0, 1000: 0, 2000: 0 }
+})
+
+watch(() => props.playerChips, () => {
+  chipsSelected.value = { 50: 0, 100: 0, 200: 0, 500: 0, 1000: 0, 2000: 0 }
 })
 </script>
 
@@ -43,25 +111,32 @@ watch(() => props.currentBet, (val) => {
       Foldear
     </button>
 
-    <button class="bet-controls__btn bet-controls__btn--check" @click="emit('action', canCheck ? 'check' : 'call')" :disabled="disabled">
+    <button class="bet-controls__btn bet-controls__btn--check" @click="handleCheckCall" :disabled="disabled">
       <Check :size="14" />
       {{ canCheck ? 'Pasar' : `Igualar $${callAmount.toLocaleString()}` }}
     </button>
 
-    <div class="bet-controls__raise">
-      <SharedNumberInput
-        v-model="raiseAmount"
-        :min="minRaiseVal"
-        :max="maxRaise"
-        :step="minRaise"
-      />
+    <div class="bet-controls__chips">
+      <div class="bet-controls__chip-row">
+        <GamePokerChip
+          v-for="chip in DENOMINATIONS"
+          :key="chip.value"
+          :value="chip.value"
+          :color="chip.color"
+          :dark-color="chip.darkColor"
+          :count="chipCount(chip.value)"
+          :disabled="isChipDisabled(chip.value)"
+          @add="addChip(chip.value)"
+          @remove="removeChip(chip.value)"
+        />
+      </div>
       <button
         class="bet-controls__btn bet-controls__btn--raise"
         @click="handleRaise"
-        :disabled="disabled || raiseAmount > playerChips + playerBet"
+        :disabled="disabled || !canRaise"
       >
         <TrendingUp :size="14" />
-        Subir
+        {{ isRaiseAboveCall ? `Subir $${raiseAmount.toLocaleString()}` : `Igualar $${callAmount.toLocaleString()}` }}
       </button>
     </div>
 
@@ -83,7 +158,7 @@ watch(() => props.currentBet, (val) => {
   border-radius: 12px;
   backdrop-filter: blur(16px);
   width: 100%;
-  max-width: 560px;
+  max-width: 620px;
 }
 
 .bet-controls__btn {
@@ -128,27 +203,37 @@ watch(() => props.currentBet, (val) => {
   color: #1a1a00;
   box-shadow: 0 2px 12px rgba(255, 215, 0, 0.2);
   width: 100%;
+  margin-top: 2px;
+  padding: 5px 12px;
 }
 .bet-controls__btn--raise:hover:not(:disabled) {
   box-shadow: 0 4px 16px rgba(255, 215, 0, 0.35);
 }
 
 .bet-controls__btn--allin {
-  background: linear-gradient(135deg, #1b8a2a, #22c55e);
+  background: linear-gradient(135deg, #b91c1c, #dc2626);
   color: white;
-  box-shadow: 0 2px 12px rgba(34, 197, 94, 0.25);
+  box-shadow: 0 2px 12px rgba(220, 38, 38, 0.25);
   padding: 6px 16px;
   font-size: 13px;
 }
 .bet-controls__btn--allin:hover:not(:disabled) {
-  box-shadow: 0 4px 18px rgba(34, 197, 94, 0.45);
+  box-shadow: 0 4px 18px rgba(220, 38, 38, 0.45);
 }
 
-.bet-controls__raise {
+.bet-controls__chips {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
   flex: 1;
   min-width: 0;
+  align-items: center;
+}
+
+.bet-controls__chip-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
 }
 </style>
