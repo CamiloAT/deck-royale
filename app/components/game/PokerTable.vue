@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Crown, Diamond, Heart, Club, Spade } from '@lucide/vue'
+import { Crown, Diamond, Heart, Club, Spade, Clock } from '@lucide/vue'
 import type { GameState } from '../../types/poker'
 
 const props = defineProps<{
@@ -33,6 +33,12 @@ const canCheck = computed(() => {
 })
 
 const minRaise = computed(() => props.gameState.bigBlind)
+
+const currentTurnPlayer = computed(() =>
+  props.gameState.players.find(p => p.isTurn)
+)
+
+const isMyTurn = computed(() => myPlayer.value?.isTurn ?? false)
 </script>
 
 <template>
@@ -81,7 +87,6 @@ const minRaise = computed(() => props.gameState.bigBlind)
 
         <GameCommunityCards :cards="gameState.communityCards" />
         <GamePotDisplay :amount="totalPot" />
-        <div class="poker-table__phase">{{ gameState.phase.toUpperCase() }}</div>
       </div>
     </div>
 
@@ -96,13 +101,19 @@ const minRaise = computed(() => props.gameState.bigBlind)
         <GameHandCards :cards="myHand" />
       </div>
 
+      <div v-if="!isMyTurn && gameState.phase !== 'waiting' && gameState.phase !== 'showdown'" class="poker-table__turn-info">
+        <Clock :size="14" />
+        Turno de {{ currentTurnPlayer?.nickname ?? '...' }} — espera tu turno
+      </div>
+
       <GameBetControls
-        v-if="myPlayer.isTurn && !myPlayer.folded && gameState.phase !== 'showdown' && gameState.phase !== 'waiting'"
+        v-if="myPlayer && !myPlayer.folded && gameState.phase !== 'showdown' && gameState.phase !== 'waiting'"
         :current-bet="gameState.currentBet"
         :min-raise="minRaise"
         :player-chips="myPlayer.chips"
         :player-bet="myPlayer.bet"
         :can-check="canCheck"
+        :disabled="!isMyTurn"
         @action="(action, amount) => emit('action', action, amount)"
       />
     </div>
@@ -211,15 +222,6 @@ const minRaise = computed(() => props.gameState.bigBlind)
   color: rgba(255, 215, 0, 0.04);
 }
 
-.poker-table__phase {
-  position: absolute;
-  bottom: 14px;
-  color: rgba(255, 255, 255, 0.25);
-  font-size: 9px;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-}
-
 .poker-table__my-area {
   display: flex;
   flex-direction: column;
@@ -232,5 +234,20 @@ const minRaise = computed(() => props.gameState.bigBlind)
   display: flex;
   align-items: center;
   gap: 16px;
+}
+
+.poker-table__turn-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: rgba(255, 215, 0, 0.6);
+  font-size: 11px;
+  letter-spacing: 1px;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
 }
 </style>

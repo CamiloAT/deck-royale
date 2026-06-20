@@ -11,7 +11,6 @@ import {
   getCallAmount,
   calculatePots,
   nextActivePlayer,
-  shouldAdvancePhase,
 } from '../poker/rules'
 
 const rooms = new Map<string, Room>()
@@ -134,6 +133,8 @@ export function startGame(roomId: string): GameState | null {
   // Deal hole cards
   const { players: dealtPlayers, remainingDeck } = dealHoleCards(players, deck)
 
+  const firstActor = (bbIndex + 1) % players.length
+
   const game: GameState = {
     roomId,
     players: dealtPlayers,
@@ -143,13 +144,15 @@ export function startGame(roomId: string): GameState | null {
     pots: [{ amount: smallBlinds + blinds, eligiblePlayerIds: dealtPlayers.map(p => p.id) }],
     currentBet: blinds,
     dealerIndex: 0,
-    currentPlayerIndex: (bbIndex + 1) % players.length,
+    currentPlayerIndex: firstActor,
     smallBlind: smallBlinds,
     bigBlind: blinds,
     minBuyIn: room.minBuyIn,
     maxBuyIn: room.maxBuyIn,
     started: true,
     turnTimer: 30,
+    lastAggressorIndex: -1,
+    firstActorIndex: firstActor,
   }
 
   game.players[game.currentPlayerIndex] = {
@@ -249,6 +252,7 @@ export function performAction(
         allIn: newChips === 0,
       }
       game.currentBet = newBet
+      game.lastAggressorIndex = playerIndex
       message = `${player.nickname} sube a ${newBet}`
       break
     }
@@ -267,6 +271,7 @@ export function performAction(
       }
       if (newBet > game.currentBet) {
         game.currentBet = newBet
+        game.lastAggressorIndex = playerIndex
       }
       message = `${player.nickname} all-in!`
       break
@@ -276,6 +281,9 @@ export function performAction(
   // Update pot
   const totalBetSum = updatedPlayers.reduce((sum, p) => sum + p.totalBet, 0)
   updatedPots = [{ amount: totalBetSum, eligiblePlayerIds: updatedPlayers.map(p => p.id) }]
+
+  // Compute next player (used for both round-end check and turn assignment)
+  const nextPlayerIdx = nextActivePlayer(updatedPlayers, playerIndex)
 
   // Check if phase should advance
   const activePlayers = getPlayersWhoCanAct(updatedPlayers, game.currentBet)
@@ -299,9 +307,19 @@ export function performAction(
     }
   }
 
-  const betsEven = activePlayers.every(p => p.bet === game.currentBet || p.allIn)
+  // Determine if betting round is complete
+  let shouldAdvance = false
+  if (activePlayers.length <= 1) {
+    shouldAdvance = true
+  } else if (game.lastAggressorIndex !== -1) {
+    // Someone bet/raised - advance when action loops back to them
+    shouldAdvance = nextPlayerIdx === game.lastAggressorIndex
+  } else {
+    // No one bet - advance when action loops back to the first actor (everyone checked)
+    shouldAdvance = nextPlayerIdx === game.firstActorIndex
+  }
 
-  if (betsEven || activePlayers.length <= 1) {
+  if (shouldAdvance) {
     // Advance phase
     const nextPhase = getNextPhase(game.phase, game.communityCards.length)
 
@@ -355,10 +373,12 @@ export function performAction(
     updatedPlayers = updatedPlayers.map(p => ({ ...p, bet: 0 }))
     game.currentBet = 0
     game.phase = nextPhase
+    game.lastAggressorIndex = -1
+    game.firstActorIndex = nextPlayerIdx !== -1 ? nextPlayerIdx : playerIndex
   }
 
-  // Find next player
-  const nextIdx = nextActivePlayer(updatedPlayers, playerIndex)
+  // Assign turn to next player
+  const nextIdx = nextPlayerIdx
   if (nextIdx !== -1) {
     updatedPlayers[nextIdx] = { ...updatedPlayers[nextIdx], isTurn: true }
   }
