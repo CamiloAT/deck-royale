@@ -32,7 +32,8 @@ watch(() => props.player, (p) => {
   prev.bet = p.bet
 
   if (anim.value) {
-    setTimeout(() => { anim.value = '' }, 800)
+    const duration = anim.value === 'raise' ? 1400 : 800
+    setTimeout(() => { anim.value = '' }, duration)
   }
 }, { deep: true })
 
@@ -128,6 +129,18 @@ const avatarClass = computed(() => `avatar--${props.avatar || 'suit'}`)
         <text x="66" y="13" text-anchor="middle">D</text>
       </g>
     </svg>
+
+    <!-- Thrown chips on raise -->
+    <div v-if="anim === 'raise'" class="avatar__thrown-chips">
+      <div class="avatar__chip avatar__chip--1"></div>
+      <div class="avatar__chip avatar__chip--2"></div>
+      <div class="avatar__chip avatar__chip--3"></div>
+      <div class="avatar__chip avatar__chip--4"></div>
+      <div class="avatar__chip avatar__chip--5"></div>
+      <div class="avatar__chip avatar__chip--6"></div>
+      <div class="avatar__chip avatar__chip--7"></div>
+      <div class="avatar__chip avatar__chip--8"></div>
+    </div>
   </div>
 </template>
 
@@ -296,9 +309,9 @@ const avatarClass = computed(() => `avatar--${props.avatar || 'suit'}`)
   animation: tap 0.6s ease-in-out;
 }
 
-/* Raise - arm up */
+/* Raise - arm up + throw chips */
 .avatar--raise .avatar__right-arm {
-  animation: raiseArm 0.5s ease-out;
+  animation: raiseArmThrow 0.5s ease-out;
 }
 
 /* Fold - slump */
@@ -309,6 +322,80 @@ const avatarClass = computed(() => `avatar--${props.avatar || 'suit'}`)
 /* All-in - push forward */
 .avatar--allin .avatar__svg {
   animation: pushForward 0.4s ease-out;
+}
+
+/* === THROWN CHIPS === */
+
+.avatar__thrown-chips {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.avatar__chip {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1.5px solid;
+  opacity: 0;
+}
+
+.avatar__chip::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: white;
+}
+
+.avatar__chip--1 {
+  background: #ef4444;
+  border-color: #991b1b;
+  animation: chipFly1 1.2s ease-out 0s forwards;
+}
+.avatar__chip--2 {
+  background: #3b82f6;
+  border-color: #1e3a8a;
+  animation: chipFly2 1.2s ease-out 0.05s forwards;
+}
+.avatar__chip--3 {
+  background: #22c55e;
+  border-color: #166534;
+  animation: chipFly3 1.2s ease-out 0.1s forwards;
+}
+.avatar__chip--4 {
+  background: #f97316;
+  border-color: #9a3412;
+  animation: chipFly4 1.2s ease-out 0.15s forwards;
+}
+.avatar__chip--5 {
+  background: #a855f7;
+  border-color: #6b21a8;
+  animation: chipFly5 1.2s ease-out 0.08s forwards;
+}
+.avatar__chip--6 {
+  background: #0ea5e9;
+  border-color: #0c4a6e;
+  animation: chipFly6 1.2s ease-out 0.12s forwards;
+}
+.avatar__chip--7 {
+  background: #ef4444;
+  border-color: #991b1b;
+  animation: chipFly7 1.2s ease-out 0.03s forwards;
+}
+.avatar__chip--8 {
+  background: #22c55e;
+  border-color: #166534;
+  animation: chipFly8 1.2s ease-out 0.18s forwards;
 }
 
 /* === KEYFRAMES === */
@@ -333,9 +420,10 @@ const avatarClass = computed(() => `avatar--${props.avatar || 'suit'}`)
   100% { transform: rotate(0deg); }
 }
 
-@keyframes raiseArm {
+@keyframes raiseArmThrow {
   0% { transform: rotate(0deg); }
-  50% { transform: rotate(-30deg); }
+  30% { transform: rotate(-45deg); }
+  60% { transform: rotate(-35deg); }
   100% { transform: rotate(-20deg); }
 }
 
@@ -353,5 +441,55 @@ const avatarClass = computed(() => `avatar--${props.avatar || 'suit'}`)
 @keyframes glowPulse {
   0%, 100% { opacity: 0.3; }
   50% { opacity: 0.8; }
+}
+
+/* Chip trajectories - parabolic arcs going outward */
+@keyframes chipFly1 {
+  0% { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(1); }
+  20% { opacity: 1; transform: translate(-18px, -32px) rotate(120deg) scale(1.2); }
+  60% { opacity: 1; transform: translate(-30px, 8px) rotate(300deg) scale(1.1); }
+  100% { opacity: 0; transform: translate(-35px, 25px) rotate(480deg) scale(0.6); }
+}
+@keyframes chipFly2 {
+  0% { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(1); }
+  20% { opacity: 1; transform: translate(-8px, -38px) rotate(-100deg) scale(1.3); }
+  60% { opacity: 1; transform: translate(-12px, 5px) rotate(-260deg) scale(1.1); }
+  100% { opacity: 0; transform: translate(-15px, 28px) rotate(-400deg) scale(0.5); }
+}
+@keyframes chipFly3 {
+  0% { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(1); }
+  20% { opacity: 1; transform: translate(6px, -36px) rotate(90deg) scale(1.2); }
+  60% { opacity: 1; transform: translate(10px, 6px) rotate(220deg) scale(1); }
+  100% { opacity: 0; transform: translate(12px, 26px) rotate(360deg) scale(0.5); }
+}
+@keyframes chipFly4 {
+  0% { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(1); }
+  20% { opacity: 1; transform: translate(20px, -30px) rotate(-140deg) scale(1.3); }
+  60% { opacity: 1; transform: translate(32px, 10px) rotate(-320deg) scale(1.1); }
+  100% { opacity: 0; transform: translate(38px, 28px) rotate(-500deg) scale(0.6); }
+}
+@keyframes chipFly5 {
+  0% { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(1); }
+  20% { opacity: 1; transform: translate(-22px, -28px) rotate(160deg) scale(1.2); }
+  60% { opacity: 1; transform: translate(-28px, 12px) rotate(340deg) scale(1); }
+  100% { opacity: 0; transform: translate(-30px, 30px) rotate(500deg) scale(0.5); }
+}
+@keyframes chipFly6 {
+  0% { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(1); }
+  20% { opacity: 1; transform: translate(15px, -34px) rotate(-120deg) scale(1.3); }
+  60% { opacity: 1; transform: translate(25px, 8px) rotate(-280deg) scale(1.1); }
+  100% { opacity: 0; transform: translate(30px, 25px) rotate(-420deg) scale(0.6); }
+}
+@keyframes chipFly7 {
+  0% { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(1); }
+  20% { opacity: 1; transform: translate(-12px, -40px) rotate(110deg) scale(1.4); }
+  60% { opacity: 1; transform: translate(-8px, 2px) rotate(270deg) scale(1.1); }
+  100% { opacity: 0; transform: translate(-5px, 30px) rotate(420deg) scale(0.5); }
+}
+@keyframes chipFly8 {
+  0% { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(1); }
+  20% { opacity: 1; transform: translate(24px, -26px) rotate(-90deg) scale(1.2); }
+  60% { opacity: 1; transform: translate(35px, 14px) rotate(-240deg) scale(1); }
+  100% { opacity: 0; transform: translate(40px, 32px) rotate(-380deg) scale(0.4); }
 }
 </style>
