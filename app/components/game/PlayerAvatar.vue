@@ -32,7 +32,7 @@ watch(() => props.player, (p) => {
   prev.bet = p.bet
 
   if (anim.value) {
-    const duration = anim.value === 'raise' ? 1400 : 800
+    const duration = anim.value === 'raise' ? 1400 : anim.value === 'fold' ? 1200 : 800
     setTimeout(() => { anim.value = '' }, duration)
   }
 }, { deep: true })
@@ -140,6 +140,18 @@ const avatarClass = computed(() => `avatar--${props.avatar || 'suit'}`)
       <div class="avatar__chip avatar__chip--6"></div>
       <div class="avatar__chip avatar__chip--7"></div>
       <div class="avatar__chip avatar__chip--8"></div>
+    </div>
+
+    <!-- Thrown cards on fold -->
+    <div v-if="anim === 'fold'" class="avatar__thrown-cards">
+      <div class="avatar__card avatar__card--1">
+        <span class="avatar__card-rank">K</span>
+        <span class="avatar__card-suit avatar__card-suit--hearts">&hearts;</span>
+      </div>
+      <div class="avatar__card avatar__card--2">
+        <span class="avatar__card-rank">Q</span>
+        <span class="avatar__card-suit avatar__card-suit--spades">&spades;</span>
+      </div>
     </div>
   </div>
 </template>
@@ -314,9 +326,12 @@ const avatarClass = computed(() => `avatar--${props.avatar || 'suit'}`)
   animation: raiseArmThrow 0.5s ease-out;
 }
 
-/* Fold - slump */
+/* Fold - slump + arm throw */
 .avatar--fold .avatar__body-group {
   animation: slump 0.5s ease-out;
+}
+.avatar--fold .avatar__right-arm {
+  animation: foldArmThrow 0.5s ease-out;
 }
 
 /* All-in - push forward */
@@ -398,6 +413,58 @@ const avatarClass = computed(() => `avatar--${props.avatar || 'suit'}`)
   animation: chipFly8 1.2s ease-out 0.18s forwards;
 }
 
+/* === THROWN CARDS === */
+
+.avatar__thrown-cards {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.avatar__card {
+  position: absolute;
+  width: 20px;
+  height: 28px;
+  background: white;
+  border-radius: 2px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  opacity: 0;
+  overflow: hidden;
+}
+
+.avatar__card-rank {
+  font-size: 8px;
+  font-weight: 900;
+  line-height: 1;
+  font-family: 'Georgia', serif;
+}
+
+.avatar__card-suit {
+  font-size: 7px;
+  line-height: 1;
+}
+
+.avatar__card-suit--hearts { color: #cc0000; }
+.avatar__card-suit--spades { color: #1a1a1a; }
+
+.avatar__card--1 {
+  animation: cardFly1 1.1s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0s forwards;
+}
+
+.avatar__card--2 {
+  animation: cardFly2 1.1s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.1s forwards;
+}
+
 /* === KEYFRAMES === */
 
 @keyframes breathe {
@@ -429,7 +496,15 @@ const avatarClass = computed(() => `avatar--${props.avatar || 'suit'}`)
 
 @keyframes slump {
   0% { transform: translateY(0) scaleY(1); }
-  100% { transform: translateY(2px) scaleY(0.97); }
+  30% { transform: translateY(1px) scaleY(0.98) rotate(-2deg); }
+  100% { transform: translateY(3px) scaleY(0.95) rotate(0deg); }
+}
+
+@keyframes foldArmThrow {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(-50deg); }
+  50% { transform: rotate(-20deg); }
+  100% { transform: rotate(10deg); }
 }
 
 @keyframes pushForward {
@@ -491,5 +566,22 @@ const avatarClass = computed(() => `avatar--${props.avatar || 'suit'}`)
   20% { opacity: 1; transform: translate(24px, -26px) rotate(-90deg) scale(1.2); }
   60% { opacity: 1; transform: translate(35px, 14px) rotate(-240deg) scale(1); }
   100% { opacity: 0; transform: translate(40px, 32px) rotate(-380deg) scale(0.4); }
+}
+
+/* Card trajectories - dramatic parabolic arcs */
+@keyframes cardFly1 {
+  0% { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(0.5); }
+  10% { opacity: 1; transform: translate(-4px, -8px) rotate(-10deg) scale(1.1); }
+  30% { opacity: 1; transform: translate(-20px, -40px) rotate(-45deg) scale(1.2); }
+  60% { opacity: 0.9; transform: translate(-45px, -10px) rotate(-120deg) scale(1.1); }
+  100% { opacity: 0; transform: translate(-60px, 30px) rotate(-220deg) scale(0.7); }
+}
+
+@keyframes cardFly2 {
+  0% { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(0.5); }
+  10% { opacity: 1; transform: translate(4px, -10px) rotate(15deg) scale(1.1); }
+  30% { opacity: 1; transform: translate(25px, -45px) rotate(50deg) scale(1.3); }
+  60% { opacity: 0.9; transform: translate(50px, -8px) rotate(130deg) scale(1.1); }
+  100% { opacity: 0; transform: translate(65px, 28px) rotate(240deg) scale(0.6); }
 }
 </style>
