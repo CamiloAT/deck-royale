@@ -11,6 +11,8 @@ const emit = defineEmits<{
   (e: 'action', action: string, amount?: number): void
 }>()
 
+const { state } = useGame()
+
 const myPlayer = computed(() =>
   props.gameState.players.find(p => p.id === props.myPlayerId)
 )
@@ -23,7 +25,7 @@ const totalPot = computed(() =>
   props.gameState.pots.reduce((sum, pot) => sum + pot.amount, 0)
 )
 
-const myHand = useState<any[]>('myHand', () => [])
+const myHand = computed(() => myPlayer.value?.hand ?? [])
 
 const canCheck = computed(() => {
   if (!myPlayer.value) return false

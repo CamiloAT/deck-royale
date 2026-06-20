@@ -9,10 +9,10 @@ const props = defineProps<{
 
 const suitSymbol = computed(() => {
   const symbols: Record<string, string> = {
-    hearts: '\u2665',
-    diamonds: '\u2666',
-    clubs: '\u2663',
-    spades: '\u2660',
+    hearts: '♥',
+    diamonds: '♦',
+    clubs: '♣',
+    spades: '♠',
   }
   return symbols[props.card.suit] || ''
 })
@@ -28,26 +28,26 @@ const suitColor = computed(() => {
     :class="{
       'card--face-down': faceDown,
       'card--small': small,
-      'card--red': suitColor === 'red' && !faceDown,
-      'card--black': suitColor === 'black' && !faceDown,
     }"
   >
     <template v-if="!faceDown">
-      <div class="card__corner card__corner--top">
+      <div class="card__corner card__corner--top" :class="`card__corner--${suitColor}`">
         <span class="card__rank">{{ card.rank }}</span>
-        <span class="card__suit">{{ suitSymbol }}</span>
+        <span class="card__suit-symbol">{{ suitSymbol }}</span>
       </div>
-      <div class="card__center">
+      <div class="card__center" :class="`card__center--${suitColor}`">
         <span class="card__suit-large">{{ suitSymbol }}</span>
       </div>
-      <div class="card__corner card__corner--bottom">
+      <div class="card__corner card__corner--bottom" :class="`card__corner--${suitColor}`">
         <span class="card__rank">{{ card.rank }}</span>
-        <span class="card__suit">{{ suitSymbol }}</span>
+        <span class="card__suit-symbol">{{ suitSymbol }}</span>
       </div>
     </template>
     <template v-else>
       <div class="card__back">
-        <span class="card__back-text">DR</span>
+        <div class="card__back-pattern">
+          <span class="card__back-text">DR</span>
+        </div>
       </div>
     </template>
   </div>
@@ -55,34 +55,114 @@ const suitColor = computed(() => {
 
 <style scoped>
 .card {
-  width: 56px;
-  height: 78px;
-  border-radius: 6px;
-  background: white;
-  border: 1.5px solid #333;
+  width: 52px;
+  height: 72px;
+  border-radius: 5px;
+  background: #fff;
+  border: 1.5px solid #ccc;
   position: relative;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.2),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.5);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 4px;
-  font-family: 'Arial', sans-serif;
+  padding: 3px 4px;
+  font-family: system-ui, -apple-system, sans-serif;
   user-select: none;
-  transition: transform 0.3s ease;
   flex-shrink: 0;
+  overflow: hidden;
 }
-.card--small { width: 40px; height: 56px; padding: 3px; }
-.card--face-down { background: linear-gradient(135deg, #1a1a5e, #2d2d8a); border-color: #444; }
-.card__corner { display: flex; flex-direction: column; align-items: center; line-height: 1; }
-.card__corner--bottom { transform: rotate(180deg); }
-.card__rank { font-size: 13px; font-weight: bold; }
-.card--small .card__rank { font-size: 10px; }
-.card__suit { font-size: 11px; }
-.card--small .card__suit { font-size: 8px; }
-.card__center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
-.card__suit-large { font-size: 22px; }
-.card--small .card__suit-large { font-size: 16px; }
-.card__back { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
-.card__back-text { color: #ffd700; font-size: 14px; font-weight: bold; font-family: 'Georgia', serif; }
-.card--small .card__back-text { font-size: 10px; }
+.card--small {
+  width: 36px;
+  height: 50px;
+  padding: 2px 3px;
+}
+
+/* Face down */
+.card--face-down {
+  background: linear-gradient(135deg, #1a1a5e 0%, #2d2d8a 50%, #1a1a5e 100%);
+  border-color: #4a4a8a;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+.card--face-down .card__back {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.card--face-down .card__back-pattern {
+  width: 80%;
+  height: 80%;
+  border: 1.5px solid rgba(255, 215, 0, 0.25);
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 3px,
+    rgba(255, 215, 0, 0.04) 3px,
+    rgba(255, 215, 0, 0.04) 6px
+  );
+}
+.card--face-down .card__back-text {
+  color: rgba(255, 215, 0, 0.5);
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 2px;
+}
+.card--small .card--face-down .card__back-text {
+  font-size: 8px;
+}
+
+/* Corners */
+.card__corner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+  gap: 0;
+}
+.card__corner--bottom {
+  transform: rotate(180deg);
+}
+.card__corner--red { color: #cc0000; }
+.card__corner--black { color: #1a1a1a; }
+
+.card__rank {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+}
+.card--small .card__rank {
+  font-size: 9px;
+}
+
+.card__suit-symbol {
+  font-size: 11px;
+  line-height: 1;
+}
+.card--small .card__suit-symbol {
+  font-size: 8px;
+}
+
+/* Center */
+.card__center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.card__center--red { color: #cc0000; }
+.card__center--black { color: #1a1a1a; }
+
+.card__suit-large {
+  font-size: 22px;
+}
+.card--small .card__suit-large {
+  font-size: 15px;
+}
 </style>
