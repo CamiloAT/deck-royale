@@ -21,19 +21,39 @@ const roomId = ref('')
 const buyIn = ref(2000)
 const smallBlind = ref(100)
 const bigBlind = ref(200)
+const remoteRoomName = ref('')
+const remoteRoomLoading = ref(false)
 
 onMounted(() => {
   const roomParam = route.query.room
   if (roomParam && typeof roomParam === 'string') {
     roomId.value = roomParam.toUpperCase()
     mode.value = 'join'
+    fetchRoomInfo(roomParam.toUpperCase())
   }
 })
 
+async function fetchRoomInfo(id: string) {
+  remoteRoomLoading.value = true
+  try {
+    const { useSocket } = await import('../../composables/useSocket')
+    const socket = useSocket()
+    socket.emit('get-room-info', { roomId: id }, (res: any) => {
+      remoteRoomLoading.value = false
+      if (res.room) {
+        remoteRoomName.value = res.room.name
+      }
+    })
+  } catch {
+    remoteRoomLoading.value = false
+  }
+}
+
 function handleCreate() {
+  const defaultName = roomName.value || `Sala de ${nickname.value}`
   emit('create', {
     nickname: nickname.value,
-    roomName: roomName.value || 'Sala de Deck Royale',
+    roomName: defaultName,
     smallBlind: smallBlind.value,
     bigBlind: bigBlind.value,
     buyIn: buyIn.value,
@@ -131,7 +151,7 @@ const particles = Array.from({ length: 18 }, (_, i) => {
             <input
               v-model="roomName"
               type="text"
-              placeholder="Nombre de la sala"
+              placeholder="Nombre de la sala (opcional)"
               class="lobby__input"
             />
             <span class="lobby__input-icon"><Home :size="16" /></span>
@@ -163,6 +183,7 @@ const particles = Array.from({ length: 18 }, (_, i) => {
         <template v-else-if="mode === 'join'">
           <template v-if="route.query.room">
             <div class="lobby__join-header">Te unirás a la sala</div>
+            <div v-if="remoteRoomName" class="lobby__join-name">{{ remoteRoomName }}</div>
             <div class="lobby__join-code">{{ roomId }}</div>
           </template>
           <template v-else>
@@ -355,6 +376,15 @@ const particles = Array.from({ length: 18 }, (_, i) => {
   text-transform: uppercase;
   letter-spacing: 2px;
   margin-bottom: 4px;
+}
+.lobby__join-name {
+  text-align: center;
+  color: white;
+  font-size: 20px;
+  font-family: 'Georgia', serif;
+  font-weight: 400;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
 }
 .lobby__join-code {
   text-align: center;

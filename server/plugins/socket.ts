@@ -44,6 +44,14 @@ function setupSocketEvents(io: Server) {
       } catch (e: any) { callback({ error: e.message }) }
     })
 
+    socket.on('get-room-info', (data: any, callback: any) => {
+      try {
+        const room = getRoom(data.roomId)
+        if (!room) { callback({ error: 'Sala no encontrada' }); return }
+        callback({ room: { id: room.id, name: room.name, playerCount: room.players.length, started: room.started } })
+      } catch (e: any) { callback({ error: e.message }) }
+    })
+
     socket.on('join-room', (data: any, callback: any) => {
       try {
         const result = joinRoom(data.roomId, data.nickname, data.buyIn || 2000)

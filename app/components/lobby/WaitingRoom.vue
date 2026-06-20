@@ -127,7 +127,7 @@ const particles = Array.from({ length: 18 }, (_, i) => {
           <Diamond :size="20" class="waiting-room__suit waiting-room__suit--diamond" />
           <Club :size="20" class="waiting-room__suit waiting-room__suit--club" />
         </div>
-        <h2 class="waiting-room__title">Sala de Espera</h2>
+        <h2 class="waiting-room__title">{{ room.name }}</h2>
         <div class="waiting-room__divider">
           <span class="waiting-room__divider-line"></span>
           <Spade :size="12" class="waiting-room__divider-icon" />
