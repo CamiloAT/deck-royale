@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { User, Home, Key, Plus, ArrowRight, ArrowLeft, Spade, Heart, Diamond, Club } from '@lucide/vue'
+import { useRoute } from 'vue-router'
 
 const emit = defineEmits<{
   (e: 'create', data: {
@@ -12,6 +13,7 @@ const emit = defineEmits<{
   (e: 'join', data: { roomId: string; nickname: string; buyIn: number }): void
 }>()
 
+const route = useRoute()
 const mode = ref<'menu' | 'create' | 'join'>('menu')
 const nickname = ref('')
 const roomName = ref('')
@@ -19,6 +21,14 @@ const roomId = ref('')
 const buyIn = ref(1000)
 const smallBlind = ref(10)
 const bigBlind = ref(20)
+
+onMounted(() => {
+  const roomParam = route.query.room
+  if (roomParam && typeof roomParam === 'string') {
+    roomId.value = roomParam.toUpperCase()
+    mode.value = 'join'
+  }
+})
 
 function handleCreate() {
   emit('create', {
@@ -158,9 +168,13 @@ const particles = Array.from({ length: 18 }, (_, i) => {
               placeholder="Código de la sala"
               class="lobby__input lobby__input--code"
               maxlength="6"
+              :readonly="!!route.query.room"
               @keyup.enter="handleJoin"
             />
             <span class="lobby__input-icon"><Key :size="16" /></span>
+          </div>
+          <div v-if="route.query.room" class="lobby__join-hint">
+            Entrarás a la sala <strong>{{ roomId }}</strong>
           </div>
           <div class="lobby__field">
             <label>Buy-In (fichas)</label>
@@ -329,6 +343,21 @@ const particles = Array.from({ length: 18 }, (_, i) => {
   letter-spacing: 10px;
   text-transform: uppercase;
   font-weight: 700;
+}
+.lobby__input--code[readonly] {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.lobby__join-hint {
+  text-align: center;
+  color: #666;
+  font-size: 13px;
+  animation: fadeIn 0.4s ease-out;
+}
+.lobby__join-hint strong {
+  color: #ffd700;
+  font-family: monospace;
 }
 
 .lobby__row { display: flex; gap: 12px; }

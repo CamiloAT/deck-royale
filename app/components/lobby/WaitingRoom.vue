@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Copy, Check, Spade, Heart, Diamond, Club, Play, LogOut, Users, Settings } from '@lucide/vue'
+import { Copy, Check, Spade, Heart, Diamond, Club, Play, LogOut, Users, Settings, Link, QrCode } from '@lucide/vue'
+import QrcodeVue from 'qrcode.vue'
 import type { Room } from '../../types/poker'
 
 const props = defineProps<{
@@ -19,6 +20,14 @@ const isHost = computed(() =>
 const canStart = computed(() => props.room.players.length >= 2)
 
 const copied = ref(false)
+const linkCopied = ref(false)
+const showQr = ref(false)
+
+const shareLink = computed(() =>
+  typeof window !== 'undefined'
+    ? `${window.location.origin}/?room=${props.room.id}`
+    : ''
+)
 
 async function copyCode() {
   try {
@@ -34,6 +43,23 @@ async function copyCode() {
     document.body.removeChild(input)
     copied.value = true
     setTimeout(() => { copied.value = false }, 2000)
+  }
+}
+
+async function copyLink() {
+  try {
+    await navigator.clipboard.writeText(shareLink.value)
+    linkCopied.value = true
+    setTimeout(() => { linkCopied.value = false }, 2000)
+  } catch {
+    const input = document.createElement('input')
+    input.value = shareLink.value
+    document.body.appendChild(input)
+    input.select()
+    document.execCommand('copy')
+    document.body.removeChild(input)
+    linkCopied.value = true
+    setTimeout(() => { linkCopied.value = false }, 2000)
   }
 }
 
@@ -142,12 +168,42 @@ const particles = Array.from({ length: 18 }, (_, i) => {
         <div v-else class="waiting-room__waiting">
           Esperando que el host inicie la partida...
         </div>
-        <button class="waiting-room__btn waiting-room__btn--leave" @click="emit('leave')">
-          <LogOut :size="16" />
-          Salir
-        </button>
+        <div class="waiting-room__secondary">
+          <button class="waiting-room__secondary-btn" @click.stop="copyLink" title="Copiar enlace para unirse">
+            <Link :size="14" />
+            <span>{{ linkCopied ? 'Copiado!' : 'Enlace' }}</span>
+          </button>
+          <button class="waiting-room__secondary-btn" @click.stop="showQr = true" title="Ver QR para unirse">
+            <QrCode :size="14" />
+            <span>QR</span>
+          </button>
+          <button class="waiting-room__secondary-btn waiting-room__secondary-btn--leave" @click="emit('leave')">
+            <LogOut :size="14" />
+            <span>Salir</span>
+          </button>
+        </div>
       </div>
     </div>
+
+    <Teleport to="body">
+      <Transition name="modal">
+        <div v-if="showQr" class="qr-overlay" @click.self="showQr = false">
+          <div class="qr-modal">
+            <button class="qr-modal__close" @click="showQr = false">&times;</button>
+            <h3 class="qr-modal__title">Escanea para unirte a la partida</h3>
+            <div class="qr-modal__code">{{ room.id }}</div>
+            <div class="qr-modal__qr">
+              <QrcodeVue :value="shareLink" :size="200" level="M" :foreground="'#ffffff'" :background="'transparent'" />
+            </div>
+            <p class="qr-modal__hint">O copia el enlace</p>
+            <button class="qr-modal__copy" @click="copyLink">
+              <Link :size="14" />
+              {{ linkCopied ? 'Copiado!' : shareLink }}
+            </button>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
@@ -374,13 +430,37 @@ const particles = Array.from({ length: 18 }, (_, i) => {
   box-shadow: 0 6px 28px rgba(255, 215, 0, 0.35);
 }
 .waiting-room__btn--start:active:not(:disabled) { transform: translateY(0); }
-.waiting-room__btn--leave {
-  background: transparent;
-  color: #555;
-  font-size: 14px;
-  padding: 8px;
+
+.waiting-room__secondary {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
 }
-.waiting-room__btn--leave:hover { color: #aaa; }
+.waiting-room__secondary-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  color: #888;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.waiting-room__secondary-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ccc;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+.waiting-room__secondary-btn--leave:hover {
+  color: #ff6666;
+  border-color: rgba(255, 102, 102, 0.2);
+}
+
 .waiting-room__waiting {
   color: #555;
   text-align: center;
@@ -388,5 +468,101 @@ const particles = Array.from({ length: 18 }, (_, i) => {
   padding: 14px;
   font-size: 14px;
   letter-spacing: 0.5px;
+}
+
+/* ── QR Modal ── */
+.qr-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+}
+.qr-modal {
+  position: relative;
+  background: rgba(10, 10, 20, 0.95);
+  border: 1px solid rgba(255, 215, 0, 0.15);
+  border-radius: 20px;
+  padding: 36px 32px;
+  max-width: 340px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+}
+.qr-modal__close {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 28px;
+  cursor: pointer;
+  transition: color 0.2s;
+  line-height: 1;
+}
+.qr-modal__close:hover { color: #fff; }
+.qr-modal__title {
+  color: white;
+  font-family: 'Georgia', serif;
+  font-size: 20px;
+  font-weight: 400;
+  margin: 0 0 8px 0;
+}
+.qr-modal__code {
+  color: #ffd700;
+  font-family: monospace;
+  font-size: 18px;
+  font-weight: bold;
+  letter-spacing: 3px;
+  margin-bottom: 20px;
+}
+.qr-modal__qr {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+  padding: 16px;
+  background: transparent;
+  border-radius: 12px;
+}
+.qr-modal__hint {
+  color: #666;
+  font-size: 12px;
+  margin: 0 0 10px 0;
+}
+.qr-modal__copy {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 10px;
+  background: rgba(255, 215, 0, 0.08);
+  border: 1px solid rgba(255, 215, 0, 0.15);
+  border-radius: 8px;
+  color: #ffd700;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  word-break: break-all;
+}
+.qr-modal__copy:hover {
+  background: rgba(255, 215, 0, 0.15);
+  border-color: rgba(255, 215, 0, 0.3);
+  color: #ffe44d;
+}
+
+/* ── Modal transitions ── */
+.modal-enter-active,
+.modal-leave-active {
+  transition: opacity 0.25s ease;
+}
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
 }
 </style>
