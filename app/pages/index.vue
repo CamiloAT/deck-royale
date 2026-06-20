@@ -73,7 +73,7 @@ function handleLeave() {
 </template>
 
 <style scoped>
-.app { min-height: 100vh; background: radial-gradient(ellipse at center, #1a1a2e 0%, #0f0f1a 100%); }
+.app { min-height: 100vh; background: transparent; }
 .loading { min-height: 100vh; display: flex; align-items: center; justify-content: center; color: #888; font-size: 18px; }
 
 .error-toast {
