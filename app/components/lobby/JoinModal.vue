@@ -337,10 +337,11 @@ const particles = Array.from({ length: 18 }, (_, i) => {
 .lobby__input::placeholder { color: #555; }
 .lobby__input--code {
   text-align: center;
-  font-size: 26px;
-  letter-spacing: 10px;
+  font-size: 18px;
+  letter-spacing: 6px;
   text-transform: uppercase;
   font-weight: 700;
+  padding: 12px 16px;
 }
 .lobby__input--code[readonly] {
   opacity: 0.7;
@@ -359,10 +360,10 @@ const particles = Array.from({ length: 18 }, (_, i) => {
   text-align: center;
   color: #ffd700;
   font-family: monospace;
-  font-size: 28px;
+  font-size: 20px;
   font-weight: bold;
   letter-spacing: 6px;
-  padding: 16px;
+  padding: 10px;
   background: rgba(255, 215, 0, 0.06);
   border: 1px solid rgba(255, 215, 0, 0.15);
   border-radius: 10px;
