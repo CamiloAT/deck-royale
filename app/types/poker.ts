@@ -92,11 +92,17 @@ export interface CreateRoomOptions {
   maxBuyIn: number
 }
 
-export interface HandResult {
-  handNumber: number
+export interface PotWinner {
+  potIndex: number
+  potAmount: number
   winnerId: string
   winnerNickname: string
   amountWon: number
+}
+
+export interface HandResult {
+  handNumber: number
+  winners: PotWinner[]
   foldedPlayers: { id: string; nickname: string }[]
   communityCards: Card[]
   finalChips: Record<string, number>

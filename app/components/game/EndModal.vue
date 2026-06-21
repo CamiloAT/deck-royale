@@ -155,7 +155,7 @@ const tabStyle = (tab: string) => ({
             <span class="end-modal__hand-num">Mano #{{ hand.handNumber }}</span>
             <span class="end-modal__hand-winner">
               <Star :size="12" />
-              {{ hand.winnerNickname }} gana ${{ hand.amountWon.toLocaleString() }}
+              {{ hand.winners.map(w => w.winnerNickname).join(', ') }} gana ${{ hand.winners.reduce((sum, w) => sum + w.amountWon, 0).toLocaleString() }}
             </span>
           </div>
           <div class="end-modal__hand-details">

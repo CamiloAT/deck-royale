@@ -9,6 +9,7 @@ import {
   getPlayersWhoCanAct,
   getCallAmount,
   calculatePots,
+  distributePots,
   nextActivePlayer,
 } from '../poker/rules'
 
@@ -257,9 +258,13 @@ export function removePlayerFromGame(roomId: string, playerId: string): { gameOv
 
       const handResult: HandResult = {
         handNumber: game.handNumber,
-        winnerId: winner.id,
-        winnerNickname: winner.nickname,
-        amountWon: totalBetSum,
+        winners: game.pots.map((pot, i) => ({
+          potIndex: i,
+          potAmount: pot.amount,
+          winnerId: winner.id,
+          winnerNickname: winner.nickname,
+          amountWon: pot.amount,
+        })),
         foldedPlayers: [],
         communityCards: [...game.communityCards],
         finalChips: Object.fromEntries(game.players.map(p => [p.id, p.chips])),
@@ -468,8 +473,8 @@ export function performAction(
     }
   }
 
-  const totalBetSum = updatedPlayers.reduce((sum, p) => sum + p.totalBet, 0)
-  updatedPots = [{ amount: totalBetSum, eligiblePlayerIds: updatedPlayers.map(p => p.id) }]
+  updatedPots = calculatePots(updatedPlayers)
+  const totalBetSum = updatedPots.reduce((sum, pot) => sum + pot.amount, 0)
 
   const nextPlayerIdx = nextActivePlayer(updatedPlayers, playerIndex)
 
@@ -487,9 +492,13 @@ export function performAction(
 
       const handResult: HandResult = {
         handNumber: game.handNumber,
-        winnerId: winner.id,
-        winnerNickname: winner.nickname,
-        amountWon: totalBetSum,
+        winners: updatedPots.map((pot, i) => ({
+          potIndex: i,
+          potAmount: pot.amount,
+          winnerId: winner.id,
+          winnerNickname: winner.nickname,
+          amountWon: pot.amount,
+        })),
         foldedPlayers: updatedPlayers
           .filter(p => p.folded)
           .map(p => ({ id: p.id, nickname: p.nickname })),
@@ -534,47 +543,32 @@ export function performAction(
       const communityResult = dealCommunityCards(game.deck, cardsNeeded)
       const finalCommunity = [...game.communityCards, ...communityResult.cards]
 
-      const activeForShowdown = updatedPlayers.filter(p => !p.folded)
-      let bestWinner = activeForShowdown[0]
-      let bestHand = evaluateHand(bestWinner.hand, finalCommunity)
-
-      for (let i = 1; i < activeForShowdown.length; i++) {
-        const hand = evaluateHand(activeForShowdown[i].hand, finalCommunity)
-        if (compareHands(hand, bestHand) > 0) {
-          bestHand = hand
-          bestWinner = activeForShowdown[i]
-        }
-      }
-
-      const winnerIdx = updatedPlayers.findIndex(p => p.id === bestWinner.id)
-      updatedPlayers[winnerIdx] = {
-        ...updatedPlayers[winnerIdx],
-        chips: updatedPlayers[winnerIdx].chips + totalBetSum,
-      }
+      const { updatedPlayers: finalPlayers, potWinners } = distributePots(updatedPlayers, updatedPots, finalCommunity)
 
       const handResult: HandResult = {
         handNumber: game.handNumber,
-        winnerId: bestWinner.id,
-        winnerNickname: bestWinner.nickname,
-        amountWon: totalBetSum,
-        foldedPlayers: updatedPlayers
+        winners: potWinners,
+        foldedPlayers: finalPlayers
           .filter(p => p.folded)
           .map(p => ({ id: p.id, nickname: p.nickname })),
         communityCards: finalCommunity,
-        finalChips: Object.fromEntries(updatedPlayers.map(p => [p.id, p.chips])),
+        finalChips: Object.fromEntries(finalPlayers.map(p => [p.id, p.chips])),
       }
       game.handHistory = [...game.handHistory, handResult]
       game.handNumber++
 
       game.phase = 'showdown'
       game.communityCards = finalCommunity
-      game.players = updatedPlayers
+      game.players = finalPlayers
       game.pots = updatedPots
       games.set(roomId, game)
 
+      const mainWinner = potWinners[0]
+      const winnerName = mainWinner?.winnerNickname ?? '?'
+      const totalWon = potWinners.reduce((sum, w) => sum + w.amountWon, 0)
       return {
         game,
-        message: `${bestWinner.nickname} gana ${totalBetSum} con ${bestHand.name}!`,
+        message: `${winnerName} gana ${totalWon}!`,
       }
     }
 
@@ -584,47 +578,32 @@ export function performAction(
       const communityResult = dealCommunityCards(game.deck, 5 - game.communityCards.length)
       const finalCommunity = [...game.communityCards, ...communityResult.cards]
 
-      const activeForShowdown = updatedPlayers.filter(p => !p.folded)
-      let bestWinner = activeForShowdown[0]
-      let bestHand = evaluateHand(bestWinner.hand, finalCommunity)
-
-      for (let i = 1; i < activeForShowdown.length; i++) {
-        const hand = evaluateHand(activeForShowdown[i].hand, finalCommunity)
-        if (compareHands(hand, bestHand) > 0) {
-          bestHand = hand
-          bestWinner = activeForShowdown[i]
-        }
-      }
-
-      const winnerIdx = updatedPlayers.findIndex(p => p.id === bestWinner.id)
-      updatedPlayers[winnerIdx] = {
-        ...updatedPlayers[winnerIdx],
-        chips: updatedPlayers[winnerIdx].chips + totalBetSum,
-      }
+      const { updatedPlayers: finalPlayers, potWinners } = distributePots(updatedPlayers, updatedPots, finalCommunity)
 
       const handResult: HandResult = {
         handNumber: game.handNumber,
-        winnerId: bestWinner.id,
-        winnerNickname: bestWinner.nickname,
-        amountWon: totalBetSum,
-        foldedPlayers: updatedPlayers
+        winners: potWinners,
+        foldedPlayers: finalPlayers
           .filter(p => p.folded)
           .map(p => ({ id: p.id, nickname: p.nickname })),
         communityCards: finalCommunity,
-        finalChips: Object.fromEntries(updatedPlayers.map(p => [p.id, p.chips])),
+        finalChips: Object.fromEntries(finalPlayers.map(p => [p.id, p.chips])),
       }
       game.handHistory = [...game.handHistory, handResult]
       game.handNumber++
 
       game.phase = 'showdown'
       game.communityCards = finalCommunity
-      game.players = updatedPlayers
+      game.players = finalPlayers
       game.pots = updatedPots
       games.set(roomId, game)
 
+      const mainWinner = potWinners[0]
+      const winnerName = mainWinner?.winnerNickname ?? '?'
+      const totalWon = potWinners.reduce((sum, w) => sum + w.amountWon, 0)
       return {
         game,
-        message: `${bestWinner.nickname} gana ${totalBetSum} con ${bestHand.name}!`,
+        message: `${winnerName} gana ${totalWon}!`,
       }
     }
 

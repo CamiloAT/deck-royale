@@ -60,8 +60,8 @@ watch(() => props.gameState.phase, (phase) => {
 <template>
   <GameVictory
     v-if="showVictory && latestHandResult"
-    :winner-nickname="latestHandResult.winnerNickname"
-    :amount-won="latestHandResult.amountWon"
+    :winner-nickname="latestHandResult.winners[0]?.winnerNickname ?? ''"
+    :amount-won="latestHandResult.winners.reduce((sum, w) => sum + w.amountWon, 0)"
     @done="showVictory = false"
   />
   <div class="poker-table">
@@ -78,7 +78,7 @@ watch(() => props.gameState.phase, (phase) => {
         :player="player"
         :is-active="player.isTurn"
         :is-myself="false"
-        :is-winner="latestHandResult?.winnerId === player.id && gameState.phase === 'showdown'"
+        :is-winner="latestHandResult?.winners?.some(w => w.winnerId === player.id) && gameState.phase === 'showdown'"
         :turn-started-at="player.isTurn ? gameState.turnStartedAt : undefined"
         :turn-timer="player.isTurn ? gameState.turnTimer : undefined"
       />
@@ -143,7 +143,7 @@ watch(() => props.gameState.phase, (phase) => {
           :player="myPlayer"
           :is-active="myPlayer.isTurn"
           :is-myself="true"
-          :is-winner="latestHandResult?.winnerId === myPlayer.id && gameState.phase === 'showdown'"
+          :is-winner="latestHandResult?.winners?.some(w => w.winnerId === myPlayer.id) && gameState.phase === 'showdown'"
         />
         <GameHandCards :cards="myHand" />
       </div>

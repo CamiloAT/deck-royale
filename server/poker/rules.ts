@@ -57,18 +57,18 @@ export function getCallAmount(player: Player, currentBet: number): number {
 }
 
 export function calculatePots(players: Player[]): Pot[] {
-  const allPlayers = players
-  const totalBets = allPlayers.map(p => ({ id: p.id, totalBet: p.totalBet }))
+  const totalBets = players.map(p => ({ id: p.id, totalBet: p.totalBet, folded: p.folded }))
 
   const pots: Pot[] = []
   let remaining = [...totalBets]
 
   while (remaining.some(p => p.totalBet > 0)) {
     const minBet = Math.min(...remaining.filter(p => p.totalBet > 0).map(p => p.totalBet))
-    const eligible = remaining.filter(p => p.totalBet >= minBet).map(p => p.id)
+    const contributing = remaining.filter(p => p.totalBet >= minBet)
+    const eligible = contributing.filter(p => !p.folded).map(p => p.id)
 
     pots.push({
-      amount: minBet * eligible.length,
+      amount: minBet * contributing.length,
       eligiblePlayerIds: eligible,
     })
 
@@ -81,26 +81,28 @@ export function calculatePots(players: Player[]): Pot[] {
   return pots
 }
 
-export function distributePots(players: Player[], pots: Pot[]): Player[] {
+export function distributePots(players: Player[], pots: Pot[], communityCards: Card[]): { updatedPlayers: Player[]; potWinners: { potIndex: number; potAmount: number; winnerId: string; winnerNickname: string; amountWon: number }[] } {
   const updatedPlayers = [...players]
+  const potWinners: { potIndex: number; potAmount: number; winnerId: string; winnerNickname: string; amountWon: number }[] = []
 
-  for (const pot of pots) {
+  for (let i = 0; i < pots.length; i++) {
+    const pot = pots[i]
     const eligiblePlayers = updatedPlayers.filter(p => pot.eligiblePlayerIds.includes(p.id))
 
     if (eligiblePlayers.length === 0) continue
 
     const hands = eligiblePlayers.map(p => ({
       player: p,
-      result: evaluateHand(p.hand, []),
+      result: evaluateHand(p.hand, communityCards),
     }))
 
     let winners = [hands[0]]
-    for (let i = 1; i < hands.length; i++) {
-      const cmp = compareHands(hands[i].result, winners[0].result)
+    for (let j = 1; j < hands.length; j++) {
+      const cmp = compareHands(hands[j].result, winners[0].result)
       if (cmp > 0) {
-        winners = [hands[i]]
+        winners = [hands[j]]
       } else if (cmp === 0) {
-        winners.push(hands[i])
+        winners.push(hands[j])
       }
     }
 
@@ -111,10 +113,17 @@ export function distributePots(players: Player[], pots: Pot[]): Player[] {
         ...updatedPlayers[idx],
         chips: updatedPlayers[idx].chips + share,
       }
+      potWinners.push({
+        potIndex: i,
+        potAmount: pot.amount,
+        winnerId: winner.player.id,
+        winnerNickname: winner.player.nickname,
+        amountWon: share,
+      })
     }
   }
 
-  return updatedPlayers
+  return { updatedPlayers, potWinners }
 }
 
 export function nextActivePlayer(players: Player[], currentIndex: number): number {
