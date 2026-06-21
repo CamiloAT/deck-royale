@@ -14,21 +14,7 @@ const loading = ref(false)
 const rejoining = ref(false)
 
 onMounted(async () => {
-  const session = JSON.parse(localStorage.getItem('deck-royale-session') || 'null')
-  if (session && session.roomId === roomId && session.nickname) {
-    rejoining.value = true
-    const result = await rejoinGame(roomId, session.nickname)
-    if ('error' in result) {
-      error.value = ''
-      rejoining.value = false
-      localStorage.removeItem('deck-royale-session')
-    } else {
-      joined.value = true
-      rejoining.value = false
-    }
-  } else if (state.gameState) {
-    requestGameState()
-  }
+  navigateTo({ query: { room: roomId }, replace: true })
 })
 
 async function handleJoin() {
@@ -54,7 +40,7 @@ async function handleAction(action: string, amount?: number) {
   if ('error' in result) error.value = result.error
 }
 
-function handleLeave() { leaveRoom(); joined.value = false; error.value = '' }
+function handleLeave() { leaveRoom(); joined.value = false; error.value = ''; navigateTo('/') }
 </script>
 
 <template>

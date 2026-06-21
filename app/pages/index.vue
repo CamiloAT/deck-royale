@@ -10,7 +10,8 @@ async function handleCreate(data: any) {
   loading.value = true
   error.value = ''
   const result = await createRoom(data)
-  if ('error' in result) error.value = result.error
+  if ('error' in result) { error.value = result.error }
+  else if ('room' in result) { navigateTo({ query: { room: result.room.id } }) }
   loading.value = false
 }
 
@@ -38,6 +39,7 @@ async function handleAction(action: string, amount?: number) {
 function handleLeave() {
   leaveRoom()
   error.value = ''
+  navigateTo('/')
 }
 
 async function handleUpdateSettings(data: any) {
@@ -48,6 +50,7 @@ async function handleUpdateSettings(data: any) {
 function handleLeaveGameEnd() {
   clearGameOver()
   leaveRoom()
+  navigateTo('/')
 }
 </script>
 
