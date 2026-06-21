@@ -716,4 +716,11 @@ const avatarClass = computed(() => `avatar--${props.avatar || 'suit'}`)
   70% { opacity: 0.9; transform: translate(46px, 12px) rotate(130deg) scale(0.95); }
   100% { opacity: 0; transform: translate(52px, 36px) rotate(170deg) scale(0.7); }
 }
+
+@media (max-width: 768px) {
+  .avatar__svg {
+    width: 38px;
+    height: 48px;
+  }
+}
 </style>

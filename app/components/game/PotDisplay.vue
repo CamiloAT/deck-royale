@@ -27,4 +27,10 @@ defineProps<{ amount: number }>()
   color: #000; font-size: 16px; font-weight: bold;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
+
+@media (max-width: 768px) {
+  .pot-display__label { font-size: 10px; }
+  .pot-display__amount { font-size: 18px; }
+  .pot-display__chip { width: 22px; height: 22px; font-size: 13px; }
+}
 </style>

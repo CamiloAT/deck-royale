@@ -116,20 +116,23 @@ watch(() => props.playerChips, () => {
       {{ canCheck ? 'Pasar' : `Igualar $${callAmount.toLocaleString()}` }}
     </button>
 
-    <div class="bet-controls__chips">
-      <div class="bet-controls__chip-row">
-        <GamePokerChip
-          v-for="chip in DENOMINATIONS"
-          :key="chip.value"
-          :value="chip.value"
-          :color="chip.color"
-          :dark-color="chip.darkColor"
-          :count="chipCount(chip.value)"
-          :disabled="isChipDisabled(chip.value)"
-          @add="addChip(chip.value)"
-          @remove="removeChip(chip.value)"
-        />
+    <div class="bet-controls__center">
+      <div class="bet-controls__chips">
+        <div class="bet-controls__chip-row">
+          <GamePokerChip
+            v-for="chip in DENOMINATIONS"
+            :key="chip.value"
+            :value="chip.value"
+            :color="chip.color"
+            :dark-color="chip.darkColor"
+            :count="chipCount(chip.value)"
+            :disabled="isChipDisabled(chip.value)"
+            @add="addChip(chip.value)"
+            @remove="removeChip(chip.value)"
+          />
+        </div>
       </div>
+
       <button
         class="bet-controls__btn bet-controls__btn--raise"
         @click="handleRaise"
@@ -198,18 +201,6 @@ watch(() => props.playerChips, () => {
   border-color: rgba(77, 166, 255, 0.4);
 }
 
-.bet-controls__btn--raise {
-  background: linear-gradient(135deg, #ffd700, #e6a800);
-  color: #1a1a00;
-  box-shadow: 0 2px 12px rgba(255, 215, 0, 0.2);
-  width: 100%;
-  margin-top: 2px;
-  padding: 5px 12px;
-}
-.bet-controls__btn--raise:hover:not(:disabled) {
-  box-shadow: 0 4px 16px rgba(255, 215, 0, 0.35);
-}
-
 .bet-controls__btn--allin {
   background: linear-gradient(135deg, #b91c1c, #dc2626);
   color: white;
@@ -235,5 +226,73 @@ watch(() => props.playerChips, () => {
   align-items: center;
   justify-content: center;
   gap: 4px;
+}
+
+.bet-controls__center {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.bet-controls__btn--raise {
+  background: linear-gradient(135deg, #ffd700, #e6a800);
+  color: #1a1a00;
+  box-shadow: 0 2px 12px rgba(255, 215, 0, 0.2);
+  width: 100%;
+  padding: 5px 12px;
+}
+.bet-controls__btn--raise:hover:not(:disabled) {
+  box-shadow: 0 4px 16px rgba(255, 215, 0, 0.35);
+}
+
+@media (max-width: 768px) {
+  .bet-controls {
+    flex-wrap: wrap;
+    padding: 6px 8px;
+    gap: 4px;
+  }
+  .bet-controls__center {
+    order: 1;
+    width: 100%;
+    display: contents;
+  }
+  .bet-controls__chips {
+    order: 1;
+    width: 100%;
+  }
+  .bet-controls__btn--raise {
+    order: 2;
+    width: 100%;
+    padding: 7px 8px;
+    font-size: 12px;
+  }
+  .bet-controls__btn--fold {
+    order: 3;
+    flex: 1;
+    font-size: 11px;
+  }
+  .bet-controls__btn--check {
+    order: 3;
+    flex: 1;
+    font-size: 11px;
+  }
+  .bet-controls__btn--allin {
+    order: 4;
+    width: 100%;
+    padding: 7px 8px;
+    font-size: 12px;
+  }
+  .bet-controls__chip-row {
+    display: flex;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    gap: 6px;
+    padding: 4px 0 6px;
+    justify-content: flex-start;
+    scrollbar-width: none;
+  }
+  .bet-controls__chip-row::-webkit-scrollbar { display: none; }
 }
 </style>

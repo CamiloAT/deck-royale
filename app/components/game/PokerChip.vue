@@ -184,4 +184,26 @@ function formatValue(v: number): string {
   background: #b91c1c;
   transform: scale(1.1);
 }
+
+@media (max-width: 768px) {
+  .poker-chip__body {
+    width: 34px;
+    height: 34px;
+  }
+  .poker-chip__inner {
+    width: 18px;
+    height: 18px;
+  }
+  .poker-chip__value { font-size: 7px; }
+  .poker-chip__notch { width: 3px; height: 3px; }
+  .poker-chip__notch--1 { top: 1px; }
+  .poker-chip__notch--2 { bottom: 1px; }
+  .poker-chip__notch--3 { left: 1px; }
+  .poker-chip__notch--4 { right: 1px; }
+  .poker-chip__notch--5,
+  .poker-chip__notch--6 { top: 4px; }
+  .poker-chip__notch--7,
+  .poker-chip__notch--8 { bottom: 4px; }
+  .poker-chip__count { font-size: 8px; padding: 0 4px; }
+}
 </style>

@@ -33,4 +33,10 @@ defineProps<{
   from { transform: scale(0.5) rotateY(180deg); opacity: 0; }
   to { transform: scale(1) rotateY(0); opacity: 1; }
 }
+
+@media (max-width: 768px) {
+  .community-cards { gap: 6px; }
+  .community-cards__cards { gap: 5px; }
+  .community-cards__empty { font-size: 11px; }
+}
 </style>

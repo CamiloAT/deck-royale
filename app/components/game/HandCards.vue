@@ -72,4 +72,14 @@ defineProps<{
   from { transform: translateY(-30px) rotateY(90deg); opacity: 0; }
   to { transform: translateY(0) rotateY(0); opacity: 1; }
 }
+
+@media (max-width: 768px) {
+  .hand-cards {
+    padding: 6px 10px;
+    gap: 4px;
+  }
+  .hand-cards__label { font-size: 9px; letter-spacing: 1px; gap: 4px; }
+  .hand-cards__cards { gap: 5px; }
+  .hand-cards__placeholder { font-size: 9px; }
+}
 </style>

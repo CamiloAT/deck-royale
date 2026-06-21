@@ -295,4 +295,26 @@ onMounted(() => {
   50% { opacity: 1; transform: scale(1.1); filter: blur(0); }
   100% { opacity: 1; transform: scale(1); filter: blur(0); }
 }
+
+@media (max-width: 768px) {
+  .tr-deck {
+    width: 36px;
+    height: 50px;
+  }
+  .tr-cascade {
+    top: -80px;
+    height: 80px;
+  }
+  .tr-cascade__card {
+    width: 28px;
+    height: 40px;
+  }
+  .tr-cascade__rank { font-size: 8px; }
+  .tr-cascade__suit { font-size: 10px; }
+  .tr-center__ring--1 { width: 56px; height: 56px; }
+  .tr-center__ring--2 { width: 100px; height: 100px; }
+  .tr-center__ring--3 { width: 150px; height: 150px; }
+  .tr-center__glow { width: 70px; height: 70px; }
+  .tr-center__text { font-size: 24px; letter-spacing: 4px; }
+}
 </style>

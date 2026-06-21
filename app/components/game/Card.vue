@@ -165,4 +165,25 @@ const suitColor = computed(() => {
 .card--small .card__suit-large {
   font-size: 15px;
 }
+
+@media (max-width: 768px) {
+  .card {
+    width: 42px;
+    height: 58px;
+    padding: 2px 3px;
+    border-radius: 4px;
+    border-width: 1px;
+  }
+  .card--small {
+    width: 30px;
+    height: 42px;
+    padding: 1px 2px;
+  }
+  .card__rank { font-size: 11px; }
+  .card__suit-symbol { font-size: 9px; }
+  .card__suit-large { font-size: 18px; }
+  .card--small .card__rank { font-size: 8px; }
+  .card--small .card__suit-symbol { font-size: 7px; }
+  .card--small .card__suit-large { font-size: 12px; }
+}
 </style>

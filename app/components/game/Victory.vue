@@ -269,4 +269,24 @@ onMounted(() => {
   80% { opacity: 0.4; transform: translate(0, -80px) scale(0.6); }
   100% { opacity: 0; transform: translate(0, -120px) scale(0); }
 }
+
+@media (max-width: 768px) {
+  .victory-chip {
+    width: 28px;
+    height: 28px;
+  }
+  .victory-chip__face {
+    width: 17px;
+    height: 17px;
+    margin: 3px auto 0;
+    font-size: 10px;
+  }
+  .victory-ring--1 { width: 60px; height: 60px; }
+  .victory-ring--2 { width: 120px; height: 120px; }
+  .victory-ring--3 { width: 180px; height: 180px; }
+  .victory-crown { transform: scale(0.8); }
+  .victory-label { font-size: 11px; letter-spacing: 5px; }
+  .victory-name { font-size: 28px; }
+  .victory-amount { font-size: 16px; }
+}
 </style>

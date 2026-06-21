@@ -272,4 +272,40 @@ watch(() => props.gameState.phase, (phase) => {
   0%, 100% { opacity: 0.6; }
   50% { opacity: 1; }
 }
+
+/* === MOBILE === */
+@media (max-width: 768px) {
+  .poker-table {
+    padding: 8px 10px;
+    gap: 6px;
+  }
+  .poker-table__opponents {
+    gap: 6px;
+  }
+  .poker-table__surface {
+    width: 96%;
+  }
+  .poker-table__felt {
+    aspect-ratio: 1.8 / 1;
+    border-radius: 80px;
+    padding: 14px;
+    gap: 6px;
+    border-width: 4px;
+  }
+  .poker-table__brand-title {
+    font-size: 28px;
+    letter-spacing: 8px;
+  }
+  .poker-table__crown {
+    width: 24px;
+    height: 24px;
+  }
+  .poker-table__corner-icon { display: none; }
+  .poker-table__my-info {
+    gap: 10px;
+  }
+  .poker-table__turn-info {
+    font-size: 10px;
+  }
+}
 </style>

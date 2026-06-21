@@ -101,4 +101,20 @@ const chipColor = computed(() => {
   0% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.6), 0 0 40px rgba(255, 215, 0, 0.3); }
   100% { box-shadow: 0 0 30px rgba(255, 215, 0, 0.8), 0 0 60px rgba(255, 215, 0, 0.4), 0 0 80px rgba(255, 215, 0, 0.2); }
 }
+
+@media (max-width: 768px) {
+  .player-seat {
+    padding: 5px;
+    min-width: 56px;
+    max-width: 70px;
+    gap: 2px;
+  }
+  .player-seat__name { font-size: 9px; max-width: 60px; }
+  .player-seat__chips { font-size: 9px; }
+  .player-seat__chip-icon { width: 10px; height: 10px; font-size: 7px; }
+  .player-seat__bet { font-size: 8px; padding: 1px 4px; top: -6px; right: -6px; }
+  .player-seat__status { font-size: 8px; }
+  .player-seat__status--all-in { font-size: 9px; }
+  .player-seat__turn-indicator { font-size: 8px; }
+}
 </style>

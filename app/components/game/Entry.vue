@@ -361,4 +361,73 @@ onMounted(() => {
   0% { opacity: 0; transform: rotate(var(--r, 0deg)) translateY(20px); }
   100% { opacity: 1; transform: rotate(var(--r, 0deg)) translateY(0); }
 }
+
+@media (max-width: 768px) {
+  .entry-card {
+    width: 44px;
+    height: 62px;
+    left: -22px;
+    top: -31px;
+    border-width: 1.5px;
+  }
+  .entry-suit { font-size: 16px; }
+  .entry-logo__suits { font-size: 18px; gap: 12px; }
+  .entry-logo__text { font-size: 28px; letter-spacing: 8px; }
+  .entry-logo__line { width: 80px; }
+  .entry-center { gap: 18px; }
+  .entry-countdown { height: 60px; }
+  .entry-countdown__number { font-size: 52px; }
+  .entry-countdown__go { font-size: 46px; }
+  .entry-waiting { font-size: 11px; letter-spacing: 2px; }
+  .entry-fan__card { width: 28px; height: 40px; margin: 0 -6px; }
+  .entry-fan__suit { font-size: 9px; }
+  @keyframes cardOrbit1 {
+    0% { opacity: 0; transform: translate(0, 0) rotate(0deg) scale(0.3); }
+    20% { opacity: 1; transform: translate(-40px, -70px) rotate(-20deg) scale(1); }
+    60% { opacity: 0.8; transform: translate(-80px, -35px) rotate(-40deg) scale(0.9); }
+    100% { opacity: 0; transform: translate(-120px, 30px) rotate(-60deg) scale(0.5); }
+  }
+  @keyframes cardOrbit2 {
+    0% { opacity: 0; transform: translate(0, 0) rotate(0deg) scale(0.3); }
+    20% { opacity: 1; transform: translate(35px, -75px) rotate(25deg) scale(1.05); }
+    60% { opacity: 0.8; transform: translate(75px, -28px) rotate(50deg) scale(0.9); }
+    100% { opacity: 0; transform: translate(105px, 35px) rotate(70deg) scale(0.5); }
+  }
+  @keyframes cardOrbit3 {
+    0% { opacity: 0; transform: translate(0, 0) rotate(0deg) scale(0.3); }
+    20% { opacity: 1; transform: translate(-60px, -42px) rotate(-30deg) scale(1.1); }
+    60% { opacity: 0.8; transform: translate(-95px, 14px) rotate(-55deg) scale(0.95); }
+    100% { opacity: 0; transform: translate(-115px, 70px) rotate(-80deg) scale(0.4); }
+  }
+  @keyframes cardOrbit4 {
+    0% { opacity: 0; transform: translate(0, 0) rotate(0deg) scale(0.3); }
+    20% { opacity: 1; transform: translate(55px, -55px) rotate(20deg) scale(1); }
+    60% { opacity: 0.8; transform: translate(90px, 7px) rotate(45deg) scale(0.85); }
+    100% { opacity: 0; transform: translate(100px, 62px) rotate(65deg) scale(0.4); }
+  }
+  @keyframes cardOrbit5 {
+    0% { opacity: 0; transform: translate(0, 0) rotate(0deg) scale(0.3); }
+    20% { opacity: 1; transform: translate(-28px, -84px) rotate(-15deg) scale(1.15); }
+    60% { opacity: 0.8; transform: translate(-56px, -42px) rotate(-35deg) scale(1); }
+    100% { opacity: 0; transform: translate(-70px, 21px) rotate(-50deg) scale(0.5); }
+  }
+  @keyframes cardOrbit6 {
+    0% { opacity: 0; transform: translate(0, 0) rotate(0deg) scale(0.3); }
+    20% { opacity: 1; transform: translate(48px, -63px) rotate(30deg) scale(1); }
+    60% { opacity: 0.8; transform: translate(70px, -14px) rotate(60deg) scale(0.9); }
+    100% { opacity: 0; transform: translate(90px, 42px) rotate(85deg) scale(0.45); }
+  }
+  @keyframes cardOrbit7 {
+    0% { opacity: 0; transform: translate(0, 0) rotate(0deg) scale(0.3); }
+    20% { opacity: 1; transform: translate(-48px, -48px) rotate(-25deg) scale(1.05); }
+    60% { opacity: 0.8; transform: translate(-76px, 21px) rotate(-50deg) scale(0.9); }
+    100% { opacity: 0; transform: translate(-95px, 56px) rotate(-70deg) scale(0.5); }
+  }
+  @keyframes cardOrbit8 {
+    0% { opacity: 0; transform: translate(0, 0) rotate(0deg) scale(0.3); }
+    20% { opacity: 1; transform: translate(62px, -42px) rotate(15deg) scale(1.1); }
+    60% { opacity: 0.8; transform: translate(82px, 14px) rotate(40deg) scale(0.95); }
+    100% { opacity: 0; transform: translate(95px, 56px) rotate(55deg) scale(0.4); }
+  }
+}
 </style>
