@@ -8,6 +8,9 @@ interface GameStore {
   message: string
   connected: boolean
   gameOverData: GameOverData | null
+  showEntry: boolean
+  showTransition: boolean
+  transitionHandNumber: number
 }
 
 const state = reactive<GameStore>({
@@ -18,6 +21,9 @@ const state = reactive<GameStore>({
   message: '',
   connected: false,
   gameOverData: null,
+  showEntry: false,
+  showTransition: false,
+  transitionHandNumber: 0,
 })
 
 export function useGame() {
@@ -48,6 +54,7 @@ export function useGame() {
     socket.on('game-started', (game: GameState) => {
       state.gameState = game
       state.room = null
+      state.showEntry = true
     })
 
     socket.on('game-update', (game: GameState) => {
@@ -71,10 +78,8 @@ export function useGame() {
 
     socket.on('hand-started', (data: { handNumber: number }) => {
       state.gameOverData = null
-      state.message = `Mano #${data.handNumber} comenzando...`
-      setTimeout(() => {
-        if (state.message === `Mano #${data.handNumber} comenzando...`) state.message = ''
-      }, 3000)
+      state.showTransition = true
+      state.transitionHandNumber = data.handNumber
     })
   }
 
@@ -129,6 +134,14 @@ export function useGame() {
     state.gameOverData = null
   }
 
+  function onEntryDone() {
+    state.showEntry = false
+  }
+
+  function onTransitionDone() {
+    state.showTransition = false
+  }
+
   function startGame(): Promise<{ success: boolean } | { error: string }> {
     return new Promise((resolve) => {
       socket.emit('start-game', (response: any) => {
@@ -174,5 +187,7 @@ export function useGame() {
     requestGameState,
     updateRoom,
     clearGameOver,
+    onEntryDone,
+    onTransitionDone,
   }
 }

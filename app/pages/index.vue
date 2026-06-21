@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const { state, connect, createRoom, joinRoom, leaveRoom, startGame, performAction, updateRoom, clearGameOver } = useGame()
+const { state, connect, createRoom, joinRoom, leaveRoom, startGame, performAction, updateRoom, clearGameOver, onEntryDone, onTransitionDone } = useGame()
 
 connect()
 
@@ -57,34 +57,40 @@ function handleLeaveGameEnd() {
 
     <div v-if="state.connected === false" class="loading">Conectando al servidor...</div>
 
-    <template v-else-if="state.gameOverData">
-      <GameEndModal
-        :data="state.gameOverData"
-        :my-player-id="state.player?.id || ''"
-        @leave="handleLeaveGameEnd"
-      />
-    </template>
+    <GameEntry v-if="state.showEntry" @done="onEntryDone" />
 
-    <template v-else-if="state.gameState && state.gameState.phase !== 'waiting'">
-      <GamePokerTable
-        :game-state="state.gameState"
-        :my-player-id="state.player?.id || ''"
-        @action="handleAction"
-      />
-    </template>
+    <GameRoundTransition v-if="state.showTransition" :hand-number="state.transitionHandNumber" @done="onTransitionDone" />
 
-    <template v-else-if="state.room">
-      <LobbyWaitingRoom
-        :room="state.room"
-        :current-player-id="state.player?.id || ''"
-        @start="handleStart"
-        @leave="handleLeave"
-        @update-settings="handleUpdateSettings"
-      />
-    </template>
+    <template v-if="!state.showEntry">
+      <template v-if="state.gameOverData">
+        <GameEndModal
+          :data="state.gameOverData"
+          :my-player-id="state.player?.id || ''"
+          @leave="handleLeaveGameEnd"
+        />
+      </template>
 
-    <template v-else>
-      <LobbyJoinModal @create="handleCreate" @join="handleJoin" />
+      <template v-else-if="state.gameState && state.gameState.phase !== 'waiting'">
+        <GamePokerTable
+          :game-state="state.gameState"
+          :my-player-id="state.player?.id || ''"
+          @action="handleAction"
+        />
+      </template>
+
+      <template v-else-if="state.room">
+        <LobbyWaitingRoom
+          :room="state.room"
+          :current-player-id="state.player?.id || ''"
+          @start="handleStart"
+          @leave="handleLeave"
+          @update-settings="handleUpdateSettings"
+        />
+      </template>
+
+      <template v-else>
+        <LobbyJoinModal @create="handleCreate" @join="handleJoin" />
+      </template>
     </template>
 
     <div v-if="state.message" class="game-message">{{ state.message }}</div>
