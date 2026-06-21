@@ -199,7 +199,7 @@ const particles = Array.from({ length: 18 }, (_, i) => {
               <span class="lobby__input-icon"><Key :size="16" /></span>
             </div>
           </template>
-          <button class="lobby__btn lobby__btn--primary" @click="handleJoin" :disabled="!roomId">
+          <button class="lobby__btn lobby__btn--primary" @click="handleJoin" :disabled="!roomId || !nickname">
             <ArrowRight :size="18" />
             Unirse
           </button>
