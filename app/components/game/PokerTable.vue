@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Crown, Diamond, Heart, Club, Spade, Clock } from '@lucide/vue'
+import { Crown, Diamond, Heart, Club, Spade, Clock, LogOut } from '@lucide/vue'
 import type { GameState } from '../../types/poker'
 
 const props = defineProps<{
@@ -9,6 +9,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'action', action: string, amount?: number): void
+  (e: 'leave'): void
 }>()
 
 const { state } = useGame()
@@ -47,6 +48,7 @@ const latestHandResult = computed(() => {
 })
 
 const showVictory = ref(false)
+const showLeaveModal = ref(false)
 
 watch(() => props.gameState.phase, (phase) => {
   if (phase === 'showdown' && latestHandResult.value) {
@@ -63,6 +65,11 @@ watch(() => props.gameState.phase, (phase) => {
     @done="showVictory = false"
   />
   <div class="poker-table">
+    <!-- Leave button -->
+    <button class="poker-table__leave" @click="showLeaveModal = true" title="Salir de la partida">
+      <LogOut :size="16" />
+    </button>
+
     <!-- Other players at the top -->
     <div class="poker-table__opponents">
       <GamePlayerSeat
@@ -140,6 +147,20 @@ watch(() => props.gameState.phase, (phase) => {
       />
     </div>
   </div>
+
+  <!-- Leave confirmation modal -->
+  <Teleport to="body">
+    <div v-if="showLeaveModal" class="leave-modal">
+      <div class="leave-modal__card">
+        <div class="leave-modal__title">Salir de la partida</div>
+        <div class="leave-modal__text">Estas seguro que quieres salir de la sala?</div>
+        <div class="leave-modal__actions">
+          <button class="leave-modal__btn leave-modal__btn--cancel" @click="showLeaveModal = false">Cancelar</button>
+          <button class="leave-modal__btn leave-modal__btn--confirm" @click="emit('leave')">Salir</button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <style scoped>
@@ -271,6 +292,94 @@ watch(() => props.gameState.phase, (phase) => {
 @keyframes pulse {
   0%, 100% { opacity: 0.6; }
   50% { opacity: 1; }
+}
+
+.poker-table__leave {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 100;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.6);
+  color: rgba(255, 255, 255, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  backdrop-filter: blur(8px);
+}
+.poker-table__leave:hover {
+  background: rgba(220, 38, 38, 0.3);
+  border-color: rgba(220, 38, 38, 0.5);
+  color: #ff6666;
+}
+
+.leave-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 6000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+}
+.leave-modal__card {
+  background: #111827;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: 16px;
+  padding: 28px 32px;
+  width: 90%;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+.leave-modal__title {
+  color: #ff6666;
+  font-size: 18px;
+  font-weight: 700;
+}
+.leave-modal__text {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  text-align: center;
+}
+.leave-modal__actions {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+.leave-modal__btn {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.leave-modal__btn--cancel {
+  background: rgba(255, 255, 255, 0.1);
+  color: #aaa;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+.leave-modal__btn--cancel:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+}
+.leave-modal__btn--confirm {
+  background: linear-gradient(135deg, #b91c1c, #dc2626);
+  color: white;
+}
+.leave-modal__btn--confirm:hover {
+  box-shadow: 0 4px 16px rgba(220, 38, 38, 0.4);
 }
 
 /* === MOBILE === */

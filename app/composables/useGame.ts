@@ -26,12 +26,54 @@ const state = reactive<GameStore>({
   transitionHandNumber: 0,
 })
 
+const STORAGE_KEY = 'deck-royale-session'
+
+function saveSession(roomId: string, playerId: string, nickname: string) {
+  if (typeof window === 'undefined') return
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ roomId, playerId, nickname }))
+}
+
+function loadSession(): { roomId: string; playerId: string; nickname: string } | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (!raw) return null
+    return JSON.parse(raw)
+  } catch { return null }
+}
+
+function clearSession() {
+  if (typeof window === 'undefined') return
+  localStorage.removeItem(STORAGE_KEY)
+}
+
 export function useGame() {
   const socket = useSocket()
+  let listenersAttached = false
 
   function connect() {
+    if (listenersAttached) return
+    listenersAttached = true
+
     socket.on('connect', () => {
       state.connected = true
+      const session = loadSession()
+      if (session && state.gameState) {
+        socket.emit('rejoin-game', { roomId: session.roomId, nickname: session.nickname }, (response: any) => {
+          if (!response.error) {
+            state.gameState = response.game
+            state.player = response.player
+          }
+        })
+      } else if (session && !state.gameState) {
+        socket.emit('rejoin-game', { roomId: session.roomId, nickname: session.nickname }, (response: any) => {
+          if (!response.error) {
+            state.gameState = response.game
+            state.player = response.player
+            state.room = null
+          }
+        })
+      }
     })
 
     socket.on('disconnect', () => {
@@ -45,9 +87,6 @@ export function useGame() {
     socket.on('player-left', (data: { playerId: string }) => {
       if (state.room) {
         state.room.players = state.room.players.filter(p => p.id !== data.playerId)
-      }
-      if (state.gameState) {
-        state.gameState.players = state.gameState.players.filter(p => p.id !== data.playerId)
       }
     })
 
@@ -97,6 +136,7 @@ export function useGame() {
         } else {
           state.room = response.room
           state.player = response.player
+          saveSession(response.room.id, response.player.id, data.nickname)
           resolve(response)
         }
       })
@@ -115,6 +155,7 @@ export function useGame() {
         } else {
           state.room = response.room
           state.player = response.player
+          saveSession(data.roomId, response.player.id, data.nickname)
           resolve(response)
         }
       })
@@ -123,6 +164,7 @@ export function useGame() {
 
   function leaveRoom() {
     socket.emit('leave-room')
+    clearSession()
     state.room = null
     state.player = null
     state.gameState = null
@@ -176,6 +218,22 @@ export function useGame() {
     })
   }
 
+  function rejoinGame(roomId: string, nickname: string): Promise<{ game: GameState; player: Player } | { error: string }> {
+    return new Promise((resolve) => {
+      socket.emit('rejoin-game', { roomId, nickname }, (response: any) => {
+        if (response.error) {
+          resolve({ error: response.error })
+        } else {
+          state.gameState = response.game
+          state.player = response.player
+          state.room = null
+          saveSession(roomId, response.player.id, nickname)
+          resolve(response)
+        }
+      })
+    })
+  }
+
   return {
     state: readonly(state),
     connect,
@@ -186,6 +244,7 @@ export function useGame() {
     performAction,
     requestGameState,
     updateRoom,
+    rejoinGame,
     clearGameOver,
     onEntryDone,
     onTransitionDone,

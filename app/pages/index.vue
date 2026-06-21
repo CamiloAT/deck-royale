@@ -75,6 +75,7 @@ function handleLeaveGameEnd() {
           :game-state="state.gameState"
           :my-player-id="state.player?.id || ''"
           @action="handleAction"
+          @leave="handleLeave"
         />
       </template>
 

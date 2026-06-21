@@ -2,7 +2,7 @@
 const route = useRoute()
 const roomId = route.params.roomId as string
 
-const { state, connect, joinRoom, leaveRoom, startGame, performAction } = useGame()
+const { state, connect, joinRoom, leaveRoom, startGame, performAction, requestGameState, rejoinGame } = useGame()
 
 connect()
 
@@ -11,6 +11,25 @@ const buyIn = ref(2000)
 const joined = ref(false)
 const error = ref('')
 const loading = ref(false)
+const rejoining = ref(false)
+
+onMounted(async () => {
+  const session = JSON.parse(localStorage.getItem('deck-royale-session') || 'null')
+  if (session && session.roomId === roomId && session.nickname) {
+    rejoining.value = true
+    const result = await rejoinGame(roomId, session.nickname)
+    if ('error' in result) {
+      error.value = ''
+      rejoining.value = false
+      localStorage.removeItem('deck-royale-session')
+    } else {
+      joined.value = true
+      rejoining.value = false
+    }
+  } else if (state.gameState) {
+    requestGameState()
+  }
+})
 
 async function handleJoin() {
   if (!nickname.value) { error.value = 'Ingresa un nickname'; return }
@@ -44,11 +63,14 @@ function handleLeave() { leaveRoom(); joined.value = false; error.value = '' }
 
     <div v-if="state.connected === false" class="loading">Conectando al servidor...</div>
 
+    <div v-else-if="rejoining" class="loading">Reconectando a la partida...</div>
+
     <template v-else-if="state.gameState && state.gameState.phase !== 'waiting'">
       <GamePokerTable
         :game-state="state.gameState"
         :my-player-id="state.player?.id || ''"
         @action="handleAction"
+        @leave="handleLeave"
       />
     </template>
 

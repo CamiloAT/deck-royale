@@ -94,6 +94,30 @@ function setupSocketEvents(io: Server) {
       }
     })
 
+    socket.on('rejoin-game', (data: any, callback: any) => {
+      try {
+        const roomId = data.roomId
+        const nickname = data.nickname
+        if (!roomId || !nickname) { callback({ error: 'Datos incompletos' }); return }
+        const game = getGame(roomId)
+        if (!game) { callback({ error: 'Partida no encontrada' }); return }
+        const disconnected = game.players.find(p => !p.isConnected && p.nickname === nickname)
+        if (!disconnected) { callback({ error: 'Jugador no encontrado como desconectado' }); return }
+        disconnected.isConnected = true
+        const room = getRoom(roomId)
+        if (room) {
+          const rp = room.players.find(p => p.nickname === nickname)
+          if (rp) rp.isConnected = true
+        }
+        socket.join(roomId)
+        socket.data.roomId = roomId
+        socket.data.playerId = disconnected.id
+        callback({ game, player: disconnected })
+        io!.to(roomId).emit('game-update', game)
+        io!.to(roomId).emit('player-rejoined', { playerId: disconnected.id, nickname: disconnected.nickname })
+      } catch (e: any) { callback({ error: e.message }) }
+    })
+
     socket.on('start-game', (callback: any) => {
       try {
         const roomId = socket.data.roomId
@@ -146,7 +170,16 @@ function setupSocketEvents(io: Server) {
     socket.on('disconnect', () => {
       const { roomId, playerId } = socket.data
       if (roomId && playerId) {
-        leaveRoom(roomId, playerId)
+        const room = getRoom(roomId)
+        if (room) {
+          const player = room.players.find(p => p.id === playerId)
+          if (player) player.isConnected = false
+        }
+        const game = getGame(roomId)
+        if (game) {
+          const gp = game.players.find(p => p.id === playerId)
+          if (gp) gp.isConnected = false
+        }
         io!.to(roomId).emit('player-left', { playerId })
       }
       console.log(`[Socket] Jugador desconectado: ${socket.id}`)
