@@ -79,6 +79,8 @@ watch(() => props.gameState.phase, (phase) => {
         :is-active="player.isTurn"
         :is-myself="false"
         :is-winner="latestHandResult?.winnerId === player.id && gameState.phase === 'showdown'"
+        :turn-started-at="player.isTurn ? gameState.turnStartedAt : undefined"
+        :turn-timer="player.isTurn ? gameState.turnTimer : undefined"
       />
     </div>
 
@@ -128,6 +130,10 @@ watch(() => props.gameState.phase, (phase) => {
           :is-winner="latestHandResult?.winnerId === myPlayer.id && gameState.phase === 'showdown'"
         />
         <GameHandCards :cards="myHand" />
+      </div>
+
+      <div v-if="isMyTurn && gameState.phase !== 'waiting' && gameState.phase !== 'showdown'" class="poker-table__timer">
+        <GameTimerBar :turn-started-at="gameState.turnStartedAt" :duration="gameState.turnTimer" />
       </div>
 
       <div v-if="!isMyTurn && gameState.phase !== 'waiting' && gameState.phase !== 'showdown'" class="poker-table__turn-info">
@@ -287,6 +293,11 @@ watch(() => props.gameState.phase, (phase) => {
   font-size: 11px;
   letter-spacing: 1px;
   animation: pulse 1.5s ease-in-out infinite;
+}
+
+.poker-table__timer {
+  display: flex;
+  justify-content: center;
 }
 
 @keyframes pulse {

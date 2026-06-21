@@ -64,6 +64,7 @@ export interface GameState {
   maxBuyIn: number
   started: boolean
   turnTimer: number
+  turnStartedAt: number
   lastAggressorIndex: number
   firstActorIndex: number
   handNumber: number

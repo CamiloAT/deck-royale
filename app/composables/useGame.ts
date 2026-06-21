@@ -88,6 +88,23 @@ export function useGame() {
       if (state.room) {
         state.room.players = state.room.players.filter(p => p.id !== data.playerId)
       }
+      if (state.gameState) {
+        state.gameState.players = state.gameState.players.filter(p => p.id !== data.playerId)
+      }
+    })
+
+    socket.on('player-disconnected', (data: { playerId: string; nickname: string }) => {
+      if (state.gameState) {
+        const p = state.gameState.players.find(p => p.id === data.playerId)
+        if (p) p.isConnected = false
+      }
+    })
+
+    socket.on('player-kicked', (data: { playerId: string }) => {
+      if (state.gameState) {
+        state.gameState.players = state.gameState.players.filter(p => p.id !== data.playerId)
+      }
+      clearSession()
     })
 
     socket.on('game-started', (game: GameState) => {

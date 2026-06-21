@@ -15,6 +15,27 @@ import {
 const rooms = new Map<string, Room>()
 const games = new Map<string, GameState>()
 const turnTimers = new Map<string, ReturnType<typeof setTimeout>>()
+const disconnectTimers = new Map<string, ReturnType<typeof setTimeout>>()
+const pausedTurnRemaining = new Map<string, number>()
+
+export const TURN_DURATION = 60
+export const DISCONNECT_GRACE = 15
+
+let onAutoFold: ((roomId: string, game: GameState, message: string) => void) | null = null
+let onPlayerKicked: ((roomId: string, playerId: string) => void) | null = null
+let onTurnUpdate: ((roomId: string, game: GameState) => void) | null = null
+
+export function setOnAutoFold(cb: (roomId: string, game: GameState, message: string) => void) {
+  onAutoFold = cb
+}
+
+export function setOnPlayerKicked(cb: (roomId: string, playerId: string) => void) {
+  onPlayerKicked = cb
+}
+
+export function setOnTurnUpdate(cb: (roomId: string, game: GameState) => void) {
+  onTurnUpdate = cb
+}
 
 function generateRoomId(): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
@@ -27,6 +48,109 @@ function generateRoomId(): string {
 
 function generatePlayerId(): string {
   return Math.random().toString(36).substring(2, 15)
+}
+
+export function startTurnTimer(roomId: string, playerId: string) {
+  cancelTurnTimer(roomId)
+  pausedTurnRemaining.delete(roomId)
+  const game = games.get(roomId)
+  if (!game) return
+
+  game.turnStartedAt = Date.now()
+
+  const timer = setTimeout(() => {
+    const result = performAction(roomId, playerId, 'fold')
+    if ('game' in result && onAutoFold) {
+      onAutoFold(roomId, result.game, result.message)
+    }
+  }, TURN_DURATION * 1000)
+
+  turnTimers.set(roomId, timer)
+}
+
+export function cancelTurnTimer(roomId: string) {
+  const timer = turnTimers.get(roomId)
+  if (timer) {
+    clearTimeout(timer)
+    turnTimers.delete(roomId)
+  }
+}
+
+export function pauseTurnTimer(roomId: string) {
+  const game = games.get(roomId)
+  if (!game || !game.turnStartedAt) return
+
+  const elapsed = Date.now() - game.turnStartedAt
+  const remaining = Math.max(0, TURN_DURATION * 1000 - elapsed)
+  pausedTurnRemaining.set(roomId, remaining)
+
+  cancelTurnTimer(roomId)
+}
+
+export function resumeTurnTimer(roomId: string) {
+  const game = games.get(roomId)
+  if (!game) return
+
+  const remaining = pausedTurnRemaining.get(roomId) ?? TURN_DURATION * 1000
+  pausedTurnRemaining.delete(roomId)
+
+  const currentTurnPlayer = game.players.find(p => p.isTurn)
+  if (!currentTurnPlayer) return
+
+  game.turnStartedAt = Date.now() - (TURN_DURATION * 1000 - remaining)
+
+  const timer = setTimeout(() => {
+    const result = performAction(roomId, currentTurnPlayer.id, 'fold')
+    if ('game' in result && onAutoFold) {
+      onAutoFold(roomId, result.game, result.message)
+    }
+  }, remaining)
+
+  turnTimers.set(roomId, timer)
+}
+
+export function startDisconnectTimer(roomId: string, playerId: string) {
+  cancelDisconnectTimer(roomId)
+
+  const timer = setTimeout(() => {
+    kickPlayer(roomId, playerId)
+  }, DISCONNECT_GRACE * 1000)
+
+  disconnectTimers.set(roomId, timer)
+}
+
+export function cancelDisconnectTimer(roomId: string) {
+  const timer = disconnectTimers.get(roomId)
+  if (timer) {
+    clearTimeout(timer)
+    disconnectTimers.delete(roomId)
+  }
+}
+
+function kickPlayer(roomId: string, playerId: string) {
+  const game = games.get(roomId)
+  const room = rooms.get(roomId)
+
+  if (game) {
+    game.players = game.players.filter(p => p.id !== playerId)
+    if (game.players.length < 2) {
+      cancelTurnTimer(roomId)
+      pausedTurnRemaining.delete(roomId)
+    }
+    games.set(roomId, game)
+  }
+
+  if (room) {
+    room.players = room.players.filter(p => p.id !== playerId)
+    if (room.players.length === 0) {
+      deleteRoom(roomId)
+      return
+    }
+  }
+
+  if (onPlayerKicked) {
+    onPlayerKicked(roomId, playerId)
+  }
 }
 
 export function createRoom(options: CreateRoomOptions): Room {
@@ -58,9 +182,9 @@ export function getAllRooms(): Room[] {
 export function deleteRoom(id: string): void {
   rooms.delete(id)
   games.delete(id)
-  const timer = turnTimers.get(id)
-  if (timer) clearTimeout(timer)
-  turnTimers.delete(id)
+  cancelTurnTimer(id)
+  cancelDisconnectTimer(id)
+  pausedTurnRemaining.delete(id)
 }
 
 export function joinRoom(roomId: string, nickname: string, chips: number): { room: Room, player: Player } | { error: string } {
@@ -111,7 +235,6 @@ export function startGame(roomId: string): GameState | null {
   const blinds = room.bigBlind
   const smallBlinds = room.smallBlind
 
-  // Post blinds
   const sbIndex = players.length > 2 ? 1 : 0
   const bbIndex = players.length > 2 ? 2 : 1
 
@@ -129,9 +252,7 @@ export function startGame(roomId: string): GameState | null {
     chips: players[bbIndex].chips - blinds,
   }
 
-  // Deal hole cards
   const { players: dealtPlayers, remainingDeck } = dealHoleCards(players, deck)
-
   const firstActor = (bbIndex + 1) % players.length
 
   const game: GameState = {
@@ -149,7 +270,8 @@ export function startGame(roomId: string): GameState | null {
     minBuyIn: room.minBuyIn,
     maxBuyIn: room.maxBuyIn,
     started: true,
-    turnTimer: 30,
+    turnTimer: TURN_DURATION,
+    turnStartedAt: Date.now(),
     lastAggressorIndex: -1,
     firstActorIndex: firstActor,
     handNumber: 1,
@@ -162,6 +284,7 @@ export function startGame(roomId: string): GameState | null {
   }
 
   games.set(roomId, game)
+  startTurnTimer(roomId, game.players[game.currentPlayerIndex].id)
   return game
 }
 
@@ -185,9 +308,7 @@ export function performAction(
   if (!player.isTurn) return { error: 'No es tu turno' }
   if (player.folded || player.allIn) return { error: 'No puedes actuar' }
 
-  // Clear timer
-  const timer = turnTimers.get(roomId)
-  if (timer) clearTimeout(timer)
+  cancelTurnTimer(roomId)
 
   let updatedPlayers = [...game.players]
   let updatedPots = [...game.pots]
@@ -276,21 +397,16 @@ export function performAction(
     }
   }
 
-  // Update pot
   const totalBetSum = updatedPlayers.reduce((sum, p) => sum + p.totalBet, 0)
   updatedPots = [{ amount: totalBetSum, eligiblePlayerIds: updatedPlayers.map(p => p.id) }]
 
-  // Compute next player (used for both round-end check and turn assignment)
   const nextPlayerIdx = nextActivePlayer(updatedPlayers, playerIndex)
 
-  // Check if phase should advance
   const activePlayers = getPlayersWhoCanAct(updatedPlayers, game.currentBet)
 
   if (activePlayers.length <= 1) {
-    // Everyone else folded or all-in
     const remaining = updatedPlayers.filter(p => !p.folded)
     if (remaining.length === 1) {
-      // Winner by default
       const winner = remaining[0]
       const winnerIdx = updatedPlayers.findIndex(p => p.id === winner.id)
       updatedPlayers[winnerIdx] = {
@@ -298,7 +414,6 @@ export function performAction(
         chips: updatedPlayers[winnerIdx].chips + totalBetSum,
       }
 
-      // Record hand result
       const handResult: HandResult = {
         handNumber: game.handNumber,
         winnerId: winner.id,
@@ -321,34 +436,26 @@ export function performAction(
     }
   }
 
-  // Determine if betting round is complete
   const nonFolded = updatedPlayers.filter(p => !p.folded)
   const allAllIn = nonFolded.length >= 2 && nonFolded.every(p => p.allIn)
 
   let shouldAdvance = false
   if (activePlayers.length === 0) {
-    // No one can act (all-in or folded) → advance
     shouldAdvance = true
   } else if (activePlayers.length === 1) {
     const singleActive = activePlayers[0]
-    const singleActiveIdx = updatedPlayers.findIndex(p => p.id === singleActive.id)
     if (singleActive.bet >= game.currentBet) {
-      // This player already matched the bet → round ends
       shouldAdvance = true
     } else {
-      // This player needs to call or fold → give them the turn
       shouldAdvance = false
     }
   } else if (game.lastAggressorIndex !== -1) {
-    // Someone bet/raised - advance when action loops back to them
     shouldAdvance = nextPlayerIdx === game.lastAggressorIndex
   } else {
-    // No one bet - advance when action loops back to the first actor (everyone checked)
     shouldAdvance = nextPlayerIdx === game.firstActorIndex
   }
 
   if (shouldAdvance) {
-    // All remaining non-folded players are all-in → deal all remaining cards and showdown immediately
     if (allAllIn) {
       const cardsNeeded = 5 - game.communityCards.length
       const communityResult = dealCommunityCards(game.deck, cardsNeeded)
@@ -398,11 +505,9 @@ export function performAction(
       }
     }
 
-    // Normal phase advancement
     const nextPhase = getNextPhase(game.phase, game.communityCards.length)
 
     if (nextPhase === 'showdown') {
-      // Showdown - evaluate hands
       const communityResult = dealCommunityCards(game.deck, 5 - game.communityCards.length)
       const finalCommunity = [...game.communityCards, ...communityResult.cards]
 
@@ -424,7 +529,6 @@ export function performAction(
         chips: updatedPlayers[winnerIdx].chips + totalBetSum,
       }
 
-      // Record hand result
       const handResult: HandResult = {
         handNumber: game.handNumber,
         winnerId: bestWinner.id,
@@ -451,7 +555,6 @@ export function performAction(
       }
     }
 
-    // Deal community cards
     if (nextPhase === 'flop') {
       const { cards, remainingDeck } = dealCommunityCards(game.deck, 3)
       game.communityCards = cards
@@ -462,7 +565,6 @@ export function performAction(
       game.deck = remainingDeck
     }
 
-    // Reset bets for new phase
     updatedPlayers = updatedPlayers.map(p => ({ ...p, bet: 0 }))
     game.currentBet = 0
     game.phase = nextPhase
@@ -470,7 +572,6 @@ export function performAction(
     game.firstActorIndex = nextPlayerIdx !== -1 ? nextPlayerIdx : playerIndex
   }
 
-  // Assign turn to next player
   const nextIdx = nextPlayerIdx
   if (nextIdx !== -1) {
     updatedPlayers[nextIdx] = { ...updatedPlayers[nextIdx], isTurn: true }
@@ -480,13 +581,8 @@ export function performAction(
   game.players = updatedPlayers
   game.pots = updatedPots
 
-  // Set turn timer
-  if (nextIdx !== -1) {
-    const timerTimeout = setTimeout(() => {
-      // Auto-fold on timeout
-      performAction(roomId, updatedPlayers[nextIdx].id, 'fold')
-    }, 30000)
-    turnTimers.set(roomId, timerTimeout)
+  if (nextIdx !== -1 && game.phase !== 'showdown') {
+    startTurnTimer(roomId, updatedPlayers[nextIdx].id)
   }
 
   games.set(roomId, game)
@@ -509,9 +605,9 @@ export function resetRoom(roomId: string): void {
     room.started = false
   }
   games.delete(roomId)
-  const timer = turnTimers.get(roomId)
-  if (timer) clearTimeout(timer)
-  turnTimers.delete(roomId)
+  cancelTurnTimer(roomId)
+  cancelDisconnectTimer(roomId)
+  pausedTurnRemaining.delete(roomId)
 }
 
 export function hasGameEnded(roomId: string): boolean {
@@ -525,26 +621,8 @@ export function getGameOverData(roomId: string): { players: { id: string; nickna
   const game = games.get(roomId)
   if (!game) return null
 
-  // Starting chips = chips before first hand (computed from first hand finalChips minus winner's gain)
   const startingChips: Record<string, number> = {}
   if (game.handHistory.length > 0) {
-    const firstHand = game.handHistory[0]
-    for (const p of game.players) {
-      if (p.id === firstHand.winnerId) {
-        startingChips[p.id] = firstHand.finalChips[p.id] - firstHand.amountWon
-      } else {
-        startingChips[p.id] = firstHand.finalChips[p.id]
-        // Work backwards: if player bet money and didn't win, their starting was higher
-        // We need to account for what they bet
-      }
-    }
-    // Actually, let's compute it properly from the bets
-    // Each player's starting chips = their final chips from first hand + what they lost
-    // For folded players: starting = finalChips + what they bet (totalBet)
-    // For the winner: starting = finalChips - amountWon
-    // But we don't have per-player totalBet in HandResult...
-    // Simplest: store startingChips at game start
-    // Actually, we already know: starting = buyIn for all players
     const room = rooms.get(roomId)
     if (room) {
       for (const p of game.players) {
@@ -579,13 +657,11 @@ export function nextHand(roomId: string): GameState | null {
     hand: [] as Card[],
   }))
 
-  // Rotate dealer
   const newDealerIndex = (game.dealerIndex + 1) % players.length
 
   const blinds = room.bigBlind
   const smallBlinds = room.smallBlind
 
-  // Post blinds
   const sbIndex = players.length > 2 ? (newDealerIndex + 1) % players.length : newDealerIndex
   const bbIndex = players.length > 2 ? (newDealerIndex + 2) % players.length : (newDealerIndex + 1) % players.length
 
@@ -605,7 +681,6 @@ export function nextHand(roomId: string): GameState | null {
     isDealer: newDealerIndex === bbIndex,
   }
 
-  // Set dealer for non-SB/BB
   if (newDealerIndex !== sbIndex && newDealerIndex !== bbIndex) {
     players[newDealerIndex] = { ...players[newDealerIndex], isDealer: true }
   }
@@ -628,7 +703,8 @@ export function nextHand(roomId: string): GameState | null {
     minBuyIn: room.minBuyIn,
     maxBuyIn: room.maxBuyIn,
     started: true,
-    turnTimer: 30,
+    turnTimer: TURN_DURATION,
+    turnStartedAt: Date.now(),
     lastAggressorIndex: -1,
     firstActorIndex: firstActor,
     handNumber,
@@ -641,5 +717,6 @@ export function nextHand(roomId: string): GameState | null {
   }
 
   games.set(roomId, newGame)
+  startTurnTimer(roomId, newGame.players[newGame.currentPlayerIndex].id)
   return newGame
 }

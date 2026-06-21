@@ -40,7 +40,7 @@ export function getActivePlayers(players: Player[]): Player[] {
 }
 
 export function getPlayersWhoCanAct(players: Player[], currentBet: number): Player[] {
-  return players.filter(p => !p.folded && !p.allIn && p.chips > 0)
+  return players.filter(p => !p.folded && !p.allIn && p.chips > 0 && p.isConnected)
 }
 
 export function getMinRaise(players: Player[], currentBet: number, bigBlind: number): number {
@@ -121,7 +121,7 @@ export function nextActivePlayer(players: Player[], currentIndex: number): numbe
   let next = (currentIndex + 1) % players.length
   let count = 0
   while (count < players.length) {
-    if (!players[next].folded && !players[next].allIn && players[next].chips > 0) {
+    if (!players[next].folded && !players[next].allIn && players[next].chips > 0 && players[next].isConnected) {
       return next
     }
     next = (next + 1) % players.length

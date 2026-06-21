@@ -1,5 +1,12 @@
 import { Server } from 'socket.io'
-import { createRoom, joinRoom, leaveRoom, startGame, performAction, getGame, getRoom, hasGameEnded, getGameOverData, nextHand } from '../rooms/manager'
+import {
+  createRoom, joinRoom, leaveRoom, startGame, performAction, getGame, getRoom,
+  hasGameEnded, getGameOverData, nextHand,
+  cancelTurnTimer, pauseTurnTimer, resumeTurnTimer,
+  startDisconnectTimer, cancelDisconnectTimer,
+  setOnAutoFold, setOnPlayerKicked,
+} from '../rooms/manager'
+import type { GameState } from '../../types/poker'
 
 let io: Server | null = null
 
@@ -21,7 +28,38 @@ export function defineSocketPlugin() {
   })
 }
 
+function handleShowdownAndNext(ioRef: Server, roomId: string, game: GameState) {
+  if (game.phase === 'showdown') {
+    if (hasGameEnded(roomId)) {
+      const gameOverData = getGameOverData(roomId)
+      ioRef.to(roomId).emit('game-over', gameOverData)
+    } else {
+      setTimeout(() => {
+        const newGame = nextHand(roomId)
+        if (newGame) {
+          ioRef.to(roomId).emit('game-update', newGame)
+          ioRef.to(roomId).emit('hand-started', { handNumber: newGame.handNumber })
+        }
+      }, 3000)
+    }
+  }
+}
+
 function setupSocketEvents(io: Server) {
+  setOnAutoFold((roomId, game, message) => {
+    io.to(roomId).emit('game-update', game)
+    io.to(roomId).emit('game-message', message)
+    handleShowdownAndNext(io, roomId, game)
+  })
+
+  setOnPlayerKicked((roomId, playerId) => {
+    io.to(roomId).emit('player-kicked', { playerId })
+    const game = getGame(roomId)
+    if (game) {
+      io.to(roomId).emit('game-update', game)
+    }
+  })
+
   io.on('connection', (socket) => {
     console.log(`[Socket] Jugador conectado: ${socket.id}`)
 
@@ -99,22 +137,34 @@ function setupSocketEvents(io: Server) {
         const roomId = data.roomId
         const nickname = data.nickname
         if (!roomId || !nickname) { callback({ error: 'Datos incompletos' }); return }
+
+        cancelDisconnectTimer(roomId)
+
         const game = getGame(roomId)
         if (!game) { callback({ error: 'Partida no encontrada' }); return }
+
         const disconnected = game.players.find(p => !p.isConnected && p.nickname === nickname)
         if (!disconnected) { callback({ error: 'Jugador no encontrado como desconectado' }); return }
+
+        const wasOnTurn = disconnected.isTurn
+
         disconnected.isConnected = true
         const room = getRoom(roomId)
         if (room) {
           const rp = room.players.find(p => p.nickname === nickname)
           if (rp) rp.isConnected = true
         }
+
         socket.join(roomId)
         socket.data.roomId = roomId
         socket.data.playerId = disconnected.id
         callback({ game, player: disconnected })
         io!.to(roomId).emit('game-update', game)
         io!.to(roomId).emit('player-rejoined', { playerId: disconnected.id, nickname: disconnected.nickname })
+
+        if (wasOnTurn) {
+          resumeTurnTimer(roomId)
+        }
       } catch (e: any) { callback({ error: e.message }) }
     })
 
@@ -139,21 +189,7 @@ function setupSocketEvents(io: Server) {
         io!.to(roomId).emit('game-message', result.message)
         callback({ success: true })
 
-        // Auto-advance: if hand ended (phase is showdown), check if game continues
-        if (result.game.phase === 'showdown') {
-          if (hasGameEnded(roomId)) {
-            const gameOverData = getGameOverData(roomId)
-            io!.to(roomId).emit('game-over', gameOverData)
-          } else {
-            setTimeout(() => {
-              const newGame = nextHand(roomId)
-              if (newGame) {
-                io!.to(roomId).emit('game-update', newGame)
-                io!.to(roomId).emit('hand-started', { handNumber: newGame.handNumber })
-              }
-            }, 3000)
-          }
-        }
+        handleShowdownAndNext(io!, roomId, result.game)
       } catch (e: any) { callback({ error: e.message }) }
     })
 
@@ -171,16 +207,26 @@ function setupSocketEvents(io: Server) {
       const { roomId, playerId } = socket.data
       if (roomId && playerId) {
         const room = getRoom(roomId)
+        const game = getGame(roomId)
+
         if (room) {
           const player = room.players.find(p => p.id === playerId)
           if (player) player.isConnected = false
         }
-        const game = getGame(roomId)
+
         if (game) {
           const gp = game.players.find(p => p.id === playerId)
-          if (gp) gp.isConnected = false
+          if (gp) {
+            gp.isConnected = false
+
+            if (gp.isTurn) {
+              pauseTurnTimer(roomId)
+            }
+          }
         }
-        io!.to(roomId).emit('player-left', { playerId })
+
+        io!.to(roomId).emit('player-disconnected', { playerId, nickname: '' })
+        startDisconnectTimer(roomId, playerId)
       }
       console.log(`[Socket] Jugador desconectado: ${socket.id}`)
     })

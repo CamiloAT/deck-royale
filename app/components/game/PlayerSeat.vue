@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Timer } from '@lucide/vue'
 import type { Player } from '../../types/poker'
 
 const props = defineProps<{
@@ -6,6 +7,8 @@ const props = defineProps<{
   isActive?: boolean
   isMyself?: boolean
   isWinner?: boolean
+  turnStartedAt?: number
+  turnTimer?: number
 }>()
 
 const chipColor = computed(() => {
@@ -15,6 +18,48 @@ const chipColor = computed(() => {
   if (chips >= 500) return '#0066cc'
   if (chips >= 100) return '#00aa00'
   return '#cc0000'
+})
+
+const timeLeft = ref(0)
+const timerColor = computed(() => {
+  if (timeLeft.value <= 10) return '#ef4444'
+  if (timeLeft.value <= 20) return '#f59e0b'
+  return '#22c55e'
+})
+
+let interval: ReturnType<typeof setInterval> | null = null
+
+function updateTimer() {
+  if (!props.turnStartedAt || !props.turnTimer) {
+    timeLeft.value = 0
+    return
+  }
+  const elapsed = Date.now() - props.turnStartedAt
+  const remaining = Math.max(0, props.turnTimer * 1000 - elapsed)
+  timeLeft.value = Math.ceil(remaining / 1000)
+}
+
+onMounted(() => {
+  updateTimer()
+  if (props.isActive && props.turnStartedAt) {
+    interval = setInterval(updateTimer, 200)
+  }
+})
+
+onUnmounted(() => {
+  if (interval) clearInterval(interval)
+})
+
+watch(() => props.isActive, (active) => {
+  if (interval) clearInterval(interval)
+  if (active && props.turnStartedAt) {
+    interval = setInterval(updateTimer, 200)
+  }
+  updateTimer()
+})
+
+watch(() => props.turnStartedAt, () => {
+  updateTimer()
 })
 </script>
 
@@ -46,9 +91,19 @@ const chipColor = computed(() => {
 
     <div v-if="player.folded" class="player-seat__status">Fold</div>
     <div v-if="player.allIn" class="player-seat__status player-seat__status--all-in">ALL IN</div>
-    <div v-if="player.isTurn && !isMyself" class="player-seat__turn-indicator">Turno</div>
+    <div v-if="player.isTurn && !isMyself" class="player-seat__turn-indicator">
+      <Timer :size="10" class="player-seat__turn-timer-icon" />
+      Turno
+    </div>
 
-    <div v-if="!player.isConnected" class="player-seat__disconnected">Desconectado</div>
+    <div v-if="player.isTurn && !isMyself && timeLeft > 0" class="player-seat__countdown" :style="{ color: timerColor }">
+      {{ timeLeft }}s
+    </div>
+
+    <div v-if="!player.isConnected" class="player-seat__disconnected">
+      <span class="player-seat__disconnect-icon">⚡</span>
+      Desconectado
+    </div>
   </div>
 </template>
 
@@ -93,8 +148,30 @@ const chipColor = computed(() => {
 
 .player-seat__status { color: #ff6666; font-size: 9px; font-weight: bold; text-transform: uppercase; }
 .player-seat__status--all-in { color: #ff4444; font-size: 11px; animation: pulse 1s infinite; }
-.player-seat__turn-indicator { color: #00ff00; font-size: 9px; font-weight: bold; animation: pulse 1s infinite; }
-.player-seat__disconnected { color: #666; font-size: 9px; font-style: italic; }
+.player-seat__turn-indicator { color: #00ff00; font-size: 9px; font-weight: bold; animation: pulse 1s infinite; display: flex; align-items: center; gap: 3px; }
+.player-seat__turn-timer-icon { animation: spin 2s linear infinite; }
+.player-seat__countdown { color: #ef4444; font-size: 10px; font-weight: 700; font-variant-numeric: tabular-nums; animation: timerPulse 1s ease-in-out infinite; }
+
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes timerPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+.player-seat__disconnected {
+  color: #f59e0b;
+  font-size: 9px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  animation: disconnectPulse 1.5s ease-in-out infinite;
+}
+
+.player-seat__disconnect-icon {
+  font-size: 10px;
+}
+
+@keyframes disconnectPulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
 
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 @keyframes winnerGlow {
