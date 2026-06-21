@@ -1,4 +1,4 @@
-import type { Card, HandResult, HandRank } from '../../types/poker'
+import type { Card, HandEvaluation, HandRank } from '../../types/poker'
 import { rankValue } from './deck'
 
 const HAND_RANK_VALUES: Record<HandRank, number> = {
@@ -41,7 +41,7 @@ function getCombinations(cards: Card[], size: number): Card[][] {
   return result
 }
 
-function evaluateFiveCards(cards: Card[]): HandResult {
+function evaluateFiveCards(cards: Card[]): HandEvaluation {
   const sorted = [...cards].sort((a, b) => rankValue(b.rank) - rankValue(a.rank))
   const values = sorted.map(c => rankValue(c.rank))
   const suits = sorted.map(c => c.suit)
@@ -135,11 +135,11 @@ function evaluateFiveCards(cards: Card[]): HandResult {
   return { rank: 'high_card', value: values[0], kickers: values.slice(1, 5), name: HAND_NAMES.high_card }
 }
 
-export function evaluateHand(holeCards: Card[], communityCards: Card[]): HandResult {
+export function evaluateHand(holeCards: Card[], communityCards: Card[]): HandEvaluation {
   const allCards = [...holeCards, ...communityCards]
   const combinations = getCombinations(allCards, 5)
 
-  let bestHand: HandResult | null = null
+  let bestHand: HandEvaluation | null = null
 
   for (const combo of combinations) {
     const result = evaluateFiveCards(combo)
@@ -151,7 +151,7 @@ export function evaluateHand(holeCards: Card[], communityCards: Card[]): HandRes
   return bestHand!
 }
 
-export function compareHands(a: HandResult, b: HandResult): number {
+export function compareHands(a: HandEvaluation, b: HandEvaluation): number {
   const rankDiff = HAND_RANK_VALUES[a.rank] - HAND_RANK_VALUES[b.rank]
   if (rankDiff !== 0) return rankDiff
 

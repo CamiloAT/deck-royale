@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const { state, connect, createRoom, joinRoom, leaveRoom, startGame, performAction, updateRoom } = useGame()
+const { state, connect, createRoom, joinRoom, leaveRoom, startGame, performAction, updateRoom, clearGameOver } = useGame()
 
 connect()
 
@@ -44,6 +44,11 @@ async function handleUpdateSettings(data: any) {
   const result = await updateRoom(data)
   if ('error' in result) error.value = result.error
 }
+
+function handleLeaveGameEnd() {
+  clearGameOver()
+  leaveRoom()
+}
 </script>
 
 <template>
@@ -51,6 +56,14 @@ async function handleUpdateSettings(data: any) {
     <div v-if="error" class="error-toast" @click="error = ''">{{ error }}</div>
 
     <div v-if="state.connected === false" class="loading">Conectando al servidor...</div>
+
+    <template v-else-if="state.gameOverData">
+      <GameEndModal
+        :data="state.gameOverData"
+        :my-player-id="state.player?.id || ''"
+        @leave="handleLeaveGameEnd"
+      />
+    </template>
 
     <template v-else-if="state.gameState && state.gameState.phase !== 'waiting'">
       <GamePokerTable

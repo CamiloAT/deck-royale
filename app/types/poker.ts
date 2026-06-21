@@ -18,7 +18,7 @@ export type HandRank =
   | 'one_pair'
   | 'high_card'
 
-export interface HandResult {
+export interface HandEvaluation {
   rank: HandRank
   value: number
   kickers: number[]
@@ -66,6 +66,8 @@ export interface GameState {
   turnTimer: number
   lastAggressorIndex: number
   firstActorIndex: number
+  handNumber: number
+  handHistory: HandResult[]
 }
 
 export interface Room {
@@ -87,4 +89,20 @@ export interface CreateRoomOptions {
   bigBlind: number
   minBuyIn: number
   maxBuyIn: number
+}
+
+export interface HandResult {
+  handNumber: number
+  winnerId: string
+  winnerNickname: string
+  amountWon: number
+  foldedPlayers: { id: string; nickname: string }[]
+  communityCards: Card[]
+  finalChips: Record<string, number>
+}
+
+export interface GameOverData {
+  players: { id: string; nickname: string; chips: number }[]
+  handHistory: HandResult[]
+  startingChips: Record<string, number>
 }

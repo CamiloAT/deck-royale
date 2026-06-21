@@ -1,5 +1,5 @@
 import { Server } from 'socket.io'
-import { createRoom, joinRoom, leaveRoom, startGame, performAction, getGame, getRoom } from '../rooms/manager'
+import { createRoom, joinRoom, leaveRoom, startGame, performAction, getGame, getRoom, hasGameEnded, getGameOverData, nextHand } from '../rooms/manager'
 
 let io: Server | null = null
 
@@ -114,6 +114,22 @@ function setupSocketEvents(io: Server) {
         io!.to(roomId).emit('game-update', result.game)
         io!.to(roomId).emit('game-message', result.message)
         callback({ success: true })
+
+        // Auto-advance: if hand ended (phase is showdown), check if game continues
+        if (result.game.phase === 'showdown') {
+          if (hasGameEnded(roomId)) {
+            const gameOverData = getGameOverData(roomId)
+            io!.to(roomId).emit('game-over', gameOverData)
+          } else {
+            setTimeout(() => {
+              const newGame = nextHand(roomId)
+              if (newGame) {
+                io!.to(roomId).emit('game-update', newGame)
+                io!.to(roomId).emit('hand-started', { handNumber: newGame.handNumber })
+              }
+            }, 3000)
+          }
+        }
       } catch (e: any) { callback({ error: e.message }) }
     })
 

@@ -1,4 +1,4 @@
-import type { Room, Player, GameState, Card } from '../types/poker'
+import type { Room, Player, GameState, Card, GameOverData } from '../types/poker'
 
 interface GameStore {
   room: Room | null
@@ -7,6 +7,7 @@ interface GameStore {
   myHand: Card[]
   message: string
   connected: boolean
+  gameOverData: GameOverData | null
 }
 
 const state = reactive<GameStore>({
@@ -16,6 +17,7 @@ const state = reactive<GameStore>({
   myHand: [],
   message: '',
   connected: false,
+  gameOverData: null,
 })
 
 export function useGame() {
@@ -61,6 +63,18 @@ export function useGame() {
 
     socket.on('your-hand', (hand: Card[]) => {
       state.myHand = hand
+    })
+
+    socket.on('game-over', (data: GameOverData) => {
+      state.gameOverData = data
+    })
+
+    socket.on('hand-started', (data: { handNumber: number }) => {
+      state.gameOverData = null
+      state.message = `Mano #${data.handNumber} comenzando...`
+      setTimeout(() => {
+        if (state.message === `Mano #${data.handNumber} comenzando...`) state.message = ''
+      }, 3000)
     })
   }
 
@@ -108,6 +122,11 @@ export function useGame() {
     state.player = null
     state.gameState = null
     state.myHand = []
+    state.gameOverData = null
+  }
+
+  function clearGameOver() {
+    state.gameOverData = null
   }
 
   function startGame(): Promise<{ success: boolean } | { error: string }> {
@@ -154,5 +173,6 @@ export function useGame() {
     performAction,
     requestGameState,
     updateRoom,
+    clearGameOver,
   }
 }
