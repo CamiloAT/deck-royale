@@ -1,7 +1,7 @@
 import { Server } from 'socket.io'
 import {
   createRoom, joinRoom, leaveRoom, removePlayerFromGame, startGame, performAction, getGame, getRoom,
-  hasGameEnded, getGameOverData, nextHand,
+  hasGameEnded, getGameOverData, nextHand, advanceAllInRunout, resolveAllInShowdown,
   cancelTurnTimer, pauseTurnTimer, resumeTurnTimer,
   startDisconnectTimer, cancelDisconnectTimer,
   setOnAutoFold, setOnPlayerKicked,
@@ -43,6 +43,34 @@ function handleShowdownAndNext(ioRef: Server, roomId: string, game: GameState) {
       }, 3000)
     }
   }
+}
+
+function handleAllInRunout(ioRef: Server, roomId: string) {
+  const game = getGame(roomId)
+  if (!game || game.phase === 'showdown') return
+  if (game.communityCards.length >= 5) return
+
+  setTimeout(() => {
+    const latestGame = getGame(roomId)
+    if (!latestGame || latestGame.phase === 'showdown') return
+
+    const result = advanceAllInRunout(roomId)
+    if (!result) return
+
+    ioRef.to(roomId).emit('game-update', result.game)
+
+    if (result.showdownReady) {
+      setTimeout(() => {
+        const showdownResult = resolveAllInShowdown(roomId)
+        if (!showdownResult) return
+        ioRef.to(roomId).emit('game-update', showdownResult.game)
+        ioRef.to(roomId).emit('game-message', showdownResult.message)
+        handleShowdownAndNext(ioRef, roomId, showdownResult.game)
+      }, 2500)
+    } else {
+      handleAllInRunout(ioRef, roomId)
+    }
+  }, 2000)
 }
 
 function setupSocketEvents(io: Server) {
@@ -208,10 +236,14 @@ function setupSocketEvents(io: Server) {
         const result = performAction(roomId, playerId, data.action, data.amount)
         if ('error' in result) { callback({ error: result.error }); return }
         io!.to(roomId).emit('game-update', result.game)
-        io!.to(roomId).emit('game-message', result.message)
+        if (result.message) io!.to(roomId).emit('game-message', result.message)
         callback({ success: true })
 
-        handleShowdownAndNext(io!, roomId, result.game)
+        if (result.allInRunout) {
+          handleAllInRunout(io!, roomId)
+        } else {
+          handleShowdownAndNext(io!, roomId, result.game)
+        }
       } catch (e: any) { callback({ error: e.message }) }
     })
 

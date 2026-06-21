@@ -106,10 +106,11 @@ export interface HandResult {
   foldedPlayers: { id: string; nickname: string }[]
   communityCards: Card[]
   finalChips: Record<string, number>
+  playerBets: Record<string, number>
 }
 
 export interface GameOverData {
-  players: { id: string; nickname: string; chips: number }[]
+  players: { id: string; nickname: string; chips: number; departed?: boolean }[]
   handHistory: HandResult[]
   startingChips: Record<string, number>
 }

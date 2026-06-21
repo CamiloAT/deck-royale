@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Trophy, Medal, History, ArrowRightLeft, Star, Home } from '@lucide/vue'
+import { Trophy, Medal, History, ArrowRightLeft, Star, Home, UserMinus } from '@lucide/vue'
 import type { GameOverData } from '../../types/poker'
 
 const props = defineProps<{
@@ -20,6 +20,39 @@ const myRank = computed(() =>
 const myPlayer = computed(() =>
   props.data.players.find(p => p.id === props.myPlayerId)
 )
+
+const groupedWinners = computed(() => {
+  const result: { handNumber: number; groups: { nickname: string; totalWon: number; pots: { potIndex: number; potAmount: number; amountWon: number }[] }[]; foldedPlayers: { id: string; nickname: string }[]; finalChips: Record<string, number>; playerBets: Record<string, number>; communityCardCount: number }[] = []
+
+  for (const hand of props.data.handHistory) {
+    const winnerMap = new Map<string, { nickname: string; totalWon: number; pots: { potIndex: number; potAmount: number; amountWon: number }[] }>()
+
+    for (const w of hand.winners) {
+      const existing = winnerMap.get(w.winnerId)
+      if (existing) {
+        existing.totalWon += w.amountWon
+        existing.pots.push({ potIndex: w.potIndex, potAmount: w.potAmount, amountWon: w.amountWon })
+      } else {
+        winnerMap.set(w.winnerId, {
+          nickname: w.winnerNickname,
+          totalWon: w.amountWon,
+          pots: [{ potIndex: w.potIndex, potAmount: w.potAmount, amountWon: w.amountWon }],
+        })
+      }
+    }
+
+    result.push({
+      handNumber: hand.handNumber,
+      groups: Array.from(winnerMap.values()),
+      foldedPlayers: hand.foldedPlayers,
+      finalChips: hand.finalChips,
+      playerBets: hand.playerBets,
+      communityCardCount: hand.communityCards.length,
+    })
+  }
+
+  return result
+})
 
 const debts = computed(() => {
   const result: { from: string; fromId: string; to: string; toId: string; amount: number }[] = []
@@ -115,20 +148,25 @@ const tabStyle = (tab: string) => ({
           :key="player.id"
           class="end-modal__player"
           :class="{
-            'end-modal__player--1st': index === 0,
+            'end-modal__player--1st': index === 0 && !player.departed,
             'end-modal__player--me': player.id === myPlayerId,
+            'end-modal__player--departed': player.departed,
           }"
         >
           <div class="end-modal__rank">
             <component
               :is="medalIcon(index + 1)"
-              v-if="index < 2"
+              v-if="index < 2 && !player.departed"
               :size="20"
               class="end-modal__medal"
             />
+            <UserMinus v-else-if="player.departed" :size="16" class="end-modal__departed-icon" />
             <span v-else class="end-modal__rank-num">#{{ index + 1 }}</span>
           </div>
-          <div class="end-modal__player-name">{{ player.nickname }}</div>
+          <div class="end-modal__player-name">
+            {{ player.nickname }}
+            <span v-if="player.departed" class="end-modal__departed-tag">se retiro</span>
+          </div>
           <div class="end-modal__player-chips">
             ${{ player.chips.toLocaleString() }}
           </div>
@@ -147,29 +185,37 @@ const tabStyle = (tab: string) => ({
           Total de manos: {{ data.handHistory.length }}
         </div>
         <div
-          v-for="hand in data.handHistory"
+          v-for="hand in groupedWinners"
           :key="hand.handNumber"
           class="end-modal__hand"
         >
           <div class="end-modal__hand-header">
             <span class="end-modal__hand-num">Mano #{{ hand.handNumber }}</span>
-            <span class="end-modal__hand-winner">
-              <Star :size="12" />
-              {{ hand.winners.map(w => w.winnerNickname).join(', ') }} gana ${{ hand.winners.reduce((sum, w) => sum + w.amountWon, 0).toLocaleString() }}
-            </span>
+            <span class="end-modal__hand-cards">{{ hand.communityCardCount }} cartas</span>
           </div>
-          <div class="end-modal__hand-details">
-            <div v-if="hand.foldedPlayers.length > 0" class="end-modal__hand-folded">
-              Se retiraron:
-              {{ hand.foldedPlayers.map(p => p.nickname).join(', ') }}
+
+          <div v-for="(group, gi) in hand.groups" :key="gi" class="end-modal__hand-winner-row">
+            <Star :size="12" class="end-modal__hand-star" />
+            <span class="end-modal__hand-winner-name">{{ group.nickname }}</span>
+            <span class="end-modal__hand-winner-amount">+${{ group.totalWon.toLocaleString() }}</span>
+          </div>
+
+          <div v-if="hand.groups.length > 1 && hand.groups[0].pots.length > 1" class="end-modal__hand-pots">
+            <div v-for="(pot, pi) in hand.groups[0].pots" :key="pi" class="end-modal__hand-pot-detail">
+              Bote {{ pot.potIndex === 0 ? 'Principal' : 'Lateral ' + pot.potIndex }}: ${{ pot.potAmount.toLocaleString() }}
             </div>
-            <div class="end-modal__hand-chips">
-              <template v-for="(chips, id) in hand.finalChips" :key="id">
-                <span class="end-modal__chip-entry">
-                  {{ data.players.find(p => p.id === id)?.nickname }}: ${{ chips.toLocaleString() }}
-                </span>
-              </template>
-            </div>
+          </div>
+
+          <div v-if="hand.foldedPlayers.length > 0" class="end-modal__hand-folded">
+            Se retiraron: {{ hand.foldedPlayers.map(p => p.nickname).join(', ') }}
+          </div>
+
+          <div class="end-modal__hand-chips">
+            <template v-for="(chips, id) in hand.finalChips" :key="id">
+              <span class="end-modal__chip-entry">
+                {{ data.players.find(p => p.id === id)?.nickname ?? '???' }}: ${{ chips.toLocaleString() }}
+              </span>
+            </template>
           </div>
         </div>
       </div>
@@ -308,6 +354,22 @@ const tabStyle = (tab: string) => ({
   border-color: rgba(255, 215, 0, 0.3);
 }
 
+.end-modal__player--departed {
+  opacity: 0.5;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.end-modal__departed-icon {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.end-modal__departed-tag {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.35);
+  font-style: italic;
+  margin-left: 6px;
+}
+
 .end-modal__rank {
   width: 32px;
   text-align: center;
@@ -381,13 +443,50 @@ const tabStyle = (tab: string) => ({
   letter-spacing: 1px;
 }
 
-.end-modal__hand-winner {
-  color: #ffd700;
-  font-size: 12px;
-  font-weight: 600;
+.end-modal__hand-winner-row {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.end-modal__hand-star {
+  color: #ffd700;
+  flex-shrink: 0;
+}
+
+.end-modal__hand-winner-name {
+  color: #ffd700;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.end-modal__hand-winner-amount {
+  color: #4ade80;
+  font-size: 13px;
+  font-weight: 600;
+  margin-left: auto;
+}
+
+.end-modal__hand-cards {
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 10px;
+  letter-spacing: 0.5px;
+}
+
+.end-modal__hand-pots {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.end-modal__hand-pot-detail {
+  color: rgba(255, 215, 0, 0.5);
+  font-size: 10px;
+  background: rgba(255, 215, 0, 0.05);
+  padding: 2px 6px;
+  border-radius: 4px;
 }
 
 .end-modal__hand-details {

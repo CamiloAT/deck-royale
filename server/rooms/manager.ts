@@ -18,6 +18,7 @@ const games = new Map<string, GameState>()
 const turnTimers = new Map<string, ReturnType<typeof setTimeout>>()
 const disconnectTimers = new Map<string, ReturnType<typeof setTimeout>>()
 const pausedTurnRemaining = new Map<string, number>()
+const departedPlayers = new Map<string, { id: string; nickname: string; chips: number }[]>()
 
 export const TURN_DURATION = 60
 export const DISCONNECT_GRACE = 15
@@ -235,6 +236,9 @@ export function removePlayerFromGame(roomId: string, playerId: string): { gameOv
   const player = game.players.find(p => p.id === playerId)
   if (!player) return null
 
+  if (!departedPlayers.has(roomId)) departedPlayers.set(roomId, [])
+  departedPlayers.get(roomId)!.push({ id: player.id, nickname: player.nickname, chips: 0 })
+
   if (player.isTurn) {
     cancelTurnTimer(roomId)
   }
@@ -268,6 +272,7 @@ export function removePlayerFromGame(roomId: string, playerId: string): { gameOv
         foldedPlayers: [],
         communityCards: [...game.communityCards],
         finalChips: Object.fromEntries(game.players.map(p => [p.id, p.chips])),
+        playerBets: Object.fromEntries(game.players.map(p => [p.id, p.totalBet])),
       }
       game.handHistory = [...game.handHistory, handResult]
       game.handNumber++
@@ -375,7 +380,7 @@ export function performAction(
   playerId: string,
   action: PlayerAction,
   amount?: number
-): { game: GameState; message: string } | { error: string } {
+): { game: GameState; message: string; allInRunout?: boolean } | { error: string } {
   const game = games.get(roomId)
   if (!game) return { error: 'Partida no encontrada' }
 
@@ -506,6 +511,7 @@ export function performAction(
           .map(p => ({ id: p.id, nickname: p.nickname })),
         communityCards: [...game.communityCards],
         finalChips: Object.fromEntries(updatedPlayers.map(p => [p.id, p.chips])),
+        playerBets: Object.fromEntries(updatedPlayers.map(p => [p.id, p.totalBet])),
       }
       game.handHistory = [...game.handHistory, handResult]
       game.handNumber++
@@ -540,38 +546,54 @@ export function performAction(
   }
 
   if (shouldAdvance) {
-    if (allAllIn) {
-      const cardsNeeded = 5 - game.communityCards.length
-      const communityResult = dealCommunityCards(game.deck, cardsNeeded)
-      const finalCommunity = [...game.communityCards, ...communityResult.cards]
+    if (allAllIn && game.communityCards.length < 5) {
+      const batch = game.communityCards.length === 0 ? 3 : 1
+      const communityResult = dealCommunityCards(game.deck, batch)
+      const newCommunity = [...game.communityCards, ...communityResult.cards]
 
-      const { updatedPlayers: finalPlayers, potWinners } = distributePots(updatedPlayers, updatedPots, finalCommunity)
+      const newPhase = getNextPhase(game.phase, newCommunity.length)
+      const isShowdown = newCommunity.length >= 5
 
-      const handResult: HandResult = {
-        handNumber: game.handNumber,
-        winners: potWinners,
-        foldedPlayers: finalPlayers
-          .filter(p => p.folded)
-          .map(p => ({ id: p.id, nickname: p.nickname })),
-        communityCards: finalCommunity,
-        finalChips: Object.fromEntries(finalPlayers.map(p => [p.id, p.chips])),
+      if (isShowdown) {
+        const { updatedPlayers: finalPlayers, potWinners } = distributePots(updatedPlayers, updatedPots, newCommunity)
+
+        const handResult: HandResult = {
+          handNumber: game.handNumber,
+          winners: potWinners,
+          foldedPlayers: finalPlayers
+            .filter(p => p.folded)
+            .map(p => ({ id: p.id, nickname: p.nickname })),
+          communityCards: newCommunity,
+          finalChips: Object.fromEntries(finalPlayers.map(p => [p.id, p.chips])),
+          playerBets: Object.fromEntries(updatedPlayers.map(p => [p.id, p.totalBet])),
+        }
+        game.handHistory = [...game.handHistory, handResult]
+        game.handNumber++
+
+        game.phase = 'showdown'
+        game.communityCards = newCommunity
+        game.deck = communityResult.remainingDeck
+        game.players = finalPlayers
+        game.pots = updatedPots
+        games.set(roomId, game)
+
+        const mainWinner = potWinners[0]
+        const winnerName = mainWinner?.winnerNickname ?? '?'
+        const totalWon = mainWinner ? potWinners.filter(w => w.winnerId === mainWinner.winnerId).reduce((sum, w) => sum + w.amountWon, 0) : 0
+        return { game, message: `${winnerName} gana ${totalWon}!` }
       }
-      game.handHistory = [...game.handHistory, handResult]
-      game.handNumber++
 
-      game.phase = 'showdown'
-      game.communityCards = finalCommunity
-      game.players = finalPlayers
+      updatedPlayers = updatedPlayers.map(p => ({ ...p, bet: 0 }))
+      game.communityCards = newCommunity
+      game.deck = communityResult.remainingDeck
+      game.phase = newPhase
+      game.currentBet = 0
+      game.lastAggressorIndex = -1
+      game.players = updatedPlayers
       game.pots = updatedPots
       games.set(roomId, game)
 
-      const mainWinner = potWinners[0]
-      const winnerName = mainWinner?.winnerNickname ?? '?'
-      const totalWon = mainWinner ? potWinners.filter(w => w.winnerId === mainWinner.winnerId).reduce((sum, w) => sum + w.amountWon, 0) : 0
-      return {
-        game,
-        message: `${winnerName} gana ${totalWon}!`,
-      }
+      return { game, message: '', allInRunout: true }
     }
 
     const nextPhase = getNextPhase(game.phase, game.communityCards.length)
@@ -590,6 +612,7 @@ export function performAction(
           .map(p => ({ id: p.id, nickname: p.nickname })),
         communityCards: finalCommunity,
         finalChips: Object.fromEntries(finalPlayers.map(p => [p.id, p.chips])),
+        playerBets: Object.fromEntries(updatedPlayers.map(p => [p.id, p.totalBet])),
       }
       game.handHistory = [...game.handHistory, handResult]
       game.handNumber++
@@ -653,6 +676,72 @@ function getNextPhase(currentPhase: GamePhase, communityCardCount: number): Game
   }
 }
 
+export function advanceAllInRunout(roomId: string): { game: GameState; message: string; showdownReady?: boolean } | null {
+  const game = games.get(roomId)
+  if (!game || game.phase === 'showdown') return null
+  if (game.communityCards.length >= 5) return null
+
+  const batch = game.communityCards.length === 0 ? 3 : 1
+  const communityResult = dealCommunityCards(game.deck, batch)
+  const newCommunity = [...game.communityCards, ...communityResult.cards]
+  const newPhase = getNextPhase(game.phase, newCommunity.length)
+  const isShowdown = newCommunity.length >= 5
+
+  const updatedPlayers = game.players.map(p => ({ ...p, bet: 0 }))
+
+  if (isShowdown) {
+    game.communityCards = newCommunity
+    game.deck = communityResult.remainingDeck
+    game.phase = newPhase
+    game.currentBet = 0
+    game.players = updatedPlayers
+    games.set(roomId, game)
+
+    return { game, message: '', showdownReady: true }
+  }
+
+  game.communityCards = newCommunity
+  game.deck = communityResult.remainingDeck
+  game.phase = newPhase
+  game.currentBet = 0
+  game.players = updatedPlayers
+  games.set(roomId, game)
+
+  return { game, message: '' }
+}
+
+export function resolveAllInShowdown(roomId: string): { game: GameState; message: string } | null {
+  const game = games.get(roomId)
+  if (!game || game.phase === 'showdown') return null
+  if (game.communityCards.length < 5) return null
+
+  const updatedPots = calculatePots(game.players)
+  const { updatedPlayers: finalPlayers, potWinners } = distributePots(game.players, updatedPots, game.communityCards)
+
+  const handResult: HandResult = {
+    handNumber: game.handNumber,
+    winners: potWinners,
+    foldedPlayers: finalPlayers
+      .filter(p => p.folded)
+      .map(p => ({ id: p.id, nickname: p.nickname })),
+    communityCards: [...game.communityCards],
+    finalChips: Object.fromEntries(finalPlayers.map(p => [p.id, p.chips])),
+    playerBets: Object.fromEntries(game.players.map(p => [p.id, p.totalBet])),
+  }
+  game.handHistory = [...game.handHistory, handResult]
+  game.handNumber++
+
+  game.phase = 'showdown'
+  game.players = finalPlayers
+  game.pots = updatedPots
+  games.set(roomId, game)
+
+  const mainWinner = potWinners[0]
+  const winnerName = mainWinner?.winnerNickname ?? '?'
+  const totalWon = mainWinner ? potWinners.filter(w => w.winnerId === mainWinner.winnerId).reduce((sum, w) => sum + w.amountWon, 0) : 0
+  return { game, message: `${winnerName} gana ${totalWon}!` }
+}
+
 export function resetRoom(roomId: string): void {
   const room = rooms.get(roomId)
   if (room) {
@@ -662,6 +751,7 @@ export function resetRoom(roomId: string): void {
   cancelTurnTimer(roomId)
   cancelDisconnectTimer(roomId)
   pausedTurnRemaining.delete(roomId)
+  departedPlayers.delete(roomId)
 }
 
 export function hasGameEnded(roomId: string): boolean {
@@ -671,24 +761,32 @@ export function hasGameEnded(roomId: string): boolean {
   return activePlayers.length <= 1
 }
 
-export function getGameOverData(roomId: string): { players: { id: string; nickname: string; chips: number }[]; handHistory: HandResult[]; startingChips: Record<string, number> } | null {
+export function getGameOverData(roomId: string): { players: { id: string; nickname: string; chips: number; departed?: boolean }[]; handHistory: HandResult[]; startingChips: Record<string, number> } | null {
   const game = games.get(roomId)
   if (!game) return null
 
+  const room = rooms.get(roomId)
   const startingChips: Record<string, number> = {}
-  if (game.handHistory.length > 0) {
-    const room = rooms.get(roomId)
-    if (room) {
-      for (const p of game.players) {
+  if (game.handHistory.length > 0 && room) {
+    for (const p of game.players) {
+      startingChips[p.id] = room.minBuyIn
+    }
+    const departed = departedPlayers.get(roomId) ?? []
+    for (const p of departed) {
+      if (!(p.id in startingChips)) {
         startingChips[p.id] = room.minBuyIn
       }
     }
   }
 
+  const departed = departedPlayers.get(roomId) ?? []
+  const allPlayers = [
+    ...game.players.map(p => ({ id: p.id, nickname: p.nickname, chips: p.chips, departed: false as const })),
+    ...departed.map(p => ({ id: p.id, nickname: p.nickname, chips: p.chips, departed: true as const })),
+  ].sort((a, b) => b.chips - a.chips)
+
   return {
-    players: game.players
-      .map(p => ({ id: p.id, nickname: p.nickname, chips: p.chips }))
-      .sort((a, b) => b.chips - a.chips),
+    players: allPlayers,
     handHistory: game.handHistory,
     startingChips,
   }
