@@ -5,6 +5,7 @@ const props = defineProps<{
   player: Player
   isActive?: boolean
   isMyself?: boolean
+  isWinner?: boolean
 }>()
 
 const chipColor = computed(() => {
@@ -25,6 +26,7 @@ const chipColor = computed(() => {
       'player-seat--myself': isMyself,
       'player-seat--folded': player.folded,
       'player-seat--all-in': player.allIn,
+      'player-seat--winner': isWinner,
     }"
   >
     <GamePlayerAvatar :player="player" :is-myself="isMyself" />
@@ -62,6 +64,14 @@ const chipColor = computed(() => {
 .player-seat--myself { background: rgba(0, 100, 0, 0.3); border-color: #00aa00; }
 .player-seat--folded { opacity: 0.5; }
 .player-seat--all-in { border-color: #ff4444; box-shadow: 0 0 12px rgba(255, 68, 68, 0.5); }
+.player-seat--winner {
+  border-color: #ffd700 !important;
+  box-shadow:
+    0 0 20px rgba(255, 215, 0, 0.6),
+    0 0 40px rgba(255, 215, 0, 0.3),
+    0 0 60px rgba(255, 215, 0, 0.15) !important;
+  animation: winnerGlow 1s ease-in-out infinite alternate;
+}
 
 .player-seat__info { text-align: center; }
 .player-seat__name { color: white; font-size: 11px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80px; }
@@ -87,4 +97,8 @@ const chipColor = computed(() => {
 .player-seat__disconnected { color: #666; font-size: 9px; font-style: italic; }
 
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+@keyframes winnerGlow {
+  0% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.6), 0 0 40px rgba(255, 215, 0, 0.3); }
+  100% { box-shadow: 0 0 30px rgba(255, 215, 0, 0.8), 0 0 60px rgba(255, 215, 0, 0.4), 0 0 80px rgba(255, 215, 0, 0.2); }
+}
 </style>

@@ -39,9 +39,29 @@ const currentTurnPlayer = computed(() =>
 )
 
 const isMyTurn = computed(() => myPlayer.value?.isTurn ?? false)
+
+const latestHandResult = computed(() => {
+  const history = props.gameState.handHistory
+  if (!history || history.length === 0) return null
+  return history[history.length - 1]
+})
+
+const showVictory = ref(false)
+
+watch(() => props.gameState.phase, (phase) => {
+  if (phase === 'showdown' && latestHandResult.value) {
+    showVictory.value = true
+  }
+}, { immediate: true })
 </script>
 
 <template>
+  <GameVictory
+    v-if="showVictory && latestHandResult"
+    :winner-nickname="latestHandResult.winnerNickname"
+    :amount-won="latestHandResult.amountWon"
+    @done="showVictory = false"
+  />
   <div class="poker-table">
     <!-- Other players at the top -->
     <div class="poker-table__opponents">
@@ -51,6 +71,7 @@ const isMyTurn = computed(() => myPlayer.value?.isTurn ?? false)
         :player="player"
         :is-active="player.isTurn"
         :is-myself="false"
+        :is-winner="latestHandResult?.winnerId === player.id && gameState.phase === 'showdown'"
       />
     </div>
 
@@ -97,6 +118,7 @@ const isMyTurn = computed(() => myPlayer.value?.isTurn ?? false)
           :player="myPlayer"
           :is-active="myPlayer.isTurn"
           :is-myself="true"
+          :is-winner="latestHandResult?.winnerId === myPlayer.id && gameState.phase === 'showdown'"
         />
         <GameHandCards :cards="myHand" />
       </div>
