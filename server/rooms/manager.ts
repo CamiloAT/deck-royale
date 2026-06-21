@@ -319,6 +319,7 @@ export function startGame(roomId: string): GameState | null {
     bet: smallBlinds,
     totalBet: smallBlinds,
     chips: players[sbIndex].chips - smallBlinds,
+    allIn: players[sbIndex].chips <= smallBlinds,
   }
 
   players[bbIndex] = {
@@ -326,6 +327,7 @@ export function startGame(roomId: string): GameState | null {
     bet: blinds,
     totalBet: blinds,
     chips: players[bbIndex].chips - blinds,
+    allIn: players[bbIndex].chips <= blinds,
   }
 
   const { players: dealtPlayers, remainingDeck } = dealHoleCards(players, deck)
@@ -735,6 +737,7 @@ export function nextHand(roomId: string): GameState | null {
     bet: smallBlinds,
     totalBet: smallBlinds,
     chips: players[sbIndex].chips - smallBlinds,
+    allIn: players[sbIndex].chips <= smallBlinds,
     isDealer: newDealerIndex === sbIndex,
   }
 
@@ -743,6 +746,7 @@ export function nextHand(roomId: string): GameState | null {
     bet: blinds,
     totalBet: blinds,
     chips: players[bbIndex].chips - blinds,
+    allIn: players[bbIndex].chips <= blinds,
     isDealer: newDealerIndex === bbIndex,
   }
 
