@@ -32,7 +32,7 @@ watch(() => props.player, (p) => {
   prev.bet = p.bet
 
   if (anim.value) {
-    const duration = anim.value === 'raise' ? 1400 : anim.value === 'fold' ? 1200 : 800
+    const duration = anim.value === 'raise' ? 1400 : anim.value === 'allin' ? 1500 : anim.value === 'fold' ? 1200 : 800
     setTimeout(() => { anim.value = '' }, duration)
   }
 }, { deep: true })
@@ -130,6 +130,28 @@ const avatarClass = computed(() => `avatar--${props.avatar || 'suit'}`)
       </g>
     </svg>
 
+    <!-- Thrown bills on all-in -->
+    <div v-if="anim === 'allin'" class="avatar__thrown-bills">
+      <div class="avatar__bill avatar__bill--1">
+        <div class="avatar__bill-inner">$</div>
+      </div>
+      <div class="avatar__bill avatar__bill--2">
+        <div class="avatar__bill-inner">$</div>
+      </div>
+      <div class="avatar__bill avatar__bill--3">
+        <div class="avatar__bill-inner">$</div>
+      </div>
+      <div class="avatar__bill avatar__bill--4">
+        <div class="avatar__bill-inner">$</div>
+      </div>
+      <div class="avatar__bill avatar__bill--5">
+        <div class="avatar__bill-inner">$</div>
+      </div>
+      <div class="avatar__bill avatar__bill--6">
+        <div class="avatar__bill-inner">$</div>
+      </div>
+    </div>
+
     <!-- Thrown chips on raise -->
     <div v-if="anim === 'raise'" class="avatar__thrown-chips">
       <div class="avatar__chip avatar__chip--1"></div>
@@ -173,9 +195,8 @@ const avatarClass = computed(() => `avatar--${props.avatar || 'suit'}`)
   --clothes-light: #10b981;
 }
 
-.avatar--allin {
-  --clothes: #b91c1c;
-  --clothes-light: #ef4444;
+.avatar--allin .avatar__body-group {
+  animation: allinPush 0.5s ease-out;
 }
 
 .avatar__svg {
@@ -335,8 +356,8 @@ const avatarClass = computed(() => `avatar--${props.avatar || 'suit'}`)
 }
 
 /* All-in - push forward */
-.avatar--allin .avatar__svg {
-  animation: pushForward 0.4s ease-out;
+.avatar--allin .avatar__right-arm {
+  animation: raiseArmThrow 0.4s ease-out;
 }
 
 /* === THROWN CHIPS === */
@@ -465,6 +486,73 @@ const avatarClass = computed(() => `avatar--${props.avatar || 'suit'}`)
   animation: cardFly2 1.1s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.1s forwards;
 }
 
+/* === THROWN BILLS === */
+
+.avatar__thrown-bills {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.avatar__bill {
+  position: absolute;
+  width: 22px;
+  height: 12px;
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 50%, #15803d 100%);
+  border-radius: 2px;
+  border: 1px solid #14532d;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3), inset 0 0 4px rgba(255, 255, 255, 0.15);
+  opacity: 0;
+  overflow: hidden;
+}
+
+.avatar__bill-inner {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.6);
+  font-family: 'Georgia', serif;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+}
+
+.avatar__bill::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  border: 0.5px solid rgba(255, 255, 255, 0.15);
+  border-radius: 1px;
+}
+
+.avatar__bill--1 {
+  animation: billFly1 1.3s ease-out 0s forwards;
+}
+.avatar__bill--2 {
+  animation: billFly2 1.3s ease-out 0.06s forwards;
+}
+.avatar__bill--3 {
+  animation: billFly3 1.3s ease-out 0.12s forwards;
+}
+.avatar__bill--4 {
+  animation: billFly4 1.3s ease-out 0.03s forwards;
+}
+.avatar__bill--5 {
+  animation: billFly5 1.3s ease-out 0.09s forwards;
+}
+.avatar__bill--6 {
+  animation: billFly6 1.3s ease-out 0.15s forwards;
+}
+
 /* === KEYFRAMES === */
 
 @keyframes breathe {
@@ -583,5 +671,49 @@ const avatarClass = computed(() => `avatar--${props.avatar || 'suit'}`)
   30% { opacity: 1; transform: translate(25px, -45px) rotate(50deg) scale(1.3); }
   60% { opacity: 0.9; transform: translate(50px, -8px) rotate(130deg) scale(1.1); }
   100% { opacity: 0; transform: translate(65px, 28px) rotate(240deg) scale(0.6); }
+}
+
+/* Bill trajectories - fluttering outward like real money */
+@keyframes billFly1 {
+  0% { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(0.6); }
+  15% { opacity: 1; transform: translate(-8px, -20px) rotate(-25deg) scale(0.9); }
+  40% { opacity: 1; transform: translate(-22px, -38px) rotate(-60deg) scale(1); }
+  70% { opacity: 0.9; transform: translate(-32px, 5px) rotate(-100deg) scale(0.95); }
+  100% { opacity: 0; transform: translate(-38px, 30px) rotate(-140deg) scale(0.8); }
+}
+@keyframes billFly2 {
+  0% { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(0.6); }
+  15% { opacity: 1; transform: translate(5px, -24px) rotate(20deg) scale(0.9); }
+  40% { opacity: 1; transform: translate(18px, -42px) rotate(55deg) scale(1.1); }
+  70% { opacity: 0.9; transform: translate(28px, -2px) rotate(95deg) scale(0.95); }
+  100% { opacity: 0; transform: translate(35px, 28px) rotate(130deg) scale(0.8); }
+}
+@keyframes billFly3 {
+  0% { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(0.6); }
+  15% { opacity: 1; transform: translate(-14px, -18px) rotate(-35deg) scale(1); }
+  40% { opacity: 1; transform: translate(-30px, -30px) rotate(-80deg) scale(1.05); }
+  70% { opacity: 0.9; transform: translate(-40px, 10px) rotate(-120deg) scale(0.9); }
+  100% { opacity: 0; transform: translate(-45px, 35px) rotate(-160deg) scale(0.7); }
+}
+@keyframes billFly4 {
+  0% { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(0.6); }
+  15% { opacity: 1; transform: translate(10px, -22px) rotate(30deg) scale(0.9); }
+  40% { opacity: 1; transform: translate(28px, -36px) rotate(70deg) scale(1); }
+  70% { opacity: 0.9; transform: translate(40px, 8px) rotate(110deg) scale(0.95); }
+  100% { opacity: 0; transform: translate(48px, 32px) rotate(150deg) scale(0.75); }
+}
+@keyframes billFly5 {
+  0% { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(0.6); }
+  15% { opacity: 1; transform: translate(-6px, -26px) rotate(-18deg) scale(0.95); }
+  40% { opacity: 1; transform: translate(-16px, -44px) rotate(-50deg) scale(1.05); }
+  70% { opacity: 0.9; transform: translate(-20px, -4px) rotate(-85deg) scale(0.9); }
+  100% { opacity: 0; transform: translate(-22px, 26px) rotate(-115deg) scale(0.75); }
+}
+@keyframes billFly6 {
+  0% { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(0.6); }
+  15% { opacity: 1; transform: translate(16px, -16px) rotate(40deg) scale(1); }
+  40% { opacity: 1; transform: translate(34px, -28px) rotate(85deg) scale(1.1); }
+  70% { opacity: 0.9; transform: translate(46px, 12px) rotate(130deg) scale(0.95); }
+  100% { opacity: 0; transform: translate(52px, 36px) rotate(170deg) scale(0.7); }
 }
 </style>
