@@ -33,6 +33,14 @@ onMounted(() => {
   }
 })
 
+watch(() => route.query.room, (newRoom) => {
+  if (!newRoom) {
+    mode.value = 'menu'
+    roomId.value = ''
+    remoteRoomName.value = ''
+  }
+})
+
 async function fetchRoomInfo(id: string) {
   remoteRoomLoading.value = true
   try {
@@ -203,7 +211,7 @@ const particles = Array.from({ length: 18 }, (_, i) => {
             <ArrowRight :size="18" />
             Unirse
           </button>
-          <button class="lobby__btn lobby__btn--ghost" @click="mode = 'menu'">
+          <button class="lobby__btn lobby__btn--ghost" @click="navigateTo('/')">
             <ArrowLeft :size="14" />
             Volver
           </button>

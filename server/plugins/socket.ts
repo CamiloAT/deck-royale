@@ -1,6 +1,6 @@
 import { Server } from 'socket.io'
 import {
-  createRoom, joinRoom, leaveRoom, startGame, performAction, getGame, getRoom,
+  createRoom, joinRoom, leaveRoom, removePlayerFromGame, startGame, performAction, getGame, getRoom,
   hasGameEnded, getGameOverData, nextHand,
   cancelTurnTimer, pauseTurnTimer, resumeTurnTimer,
   startDisconnectTimer, cancelDisconnectTimer,
@@ -56,7 +56,13 @@ function setupSocketEvents(io: Server) {
     io.to(roomId).emit('player-kicked', { playerId })
     const game = getGame(roomId)
     if (game) {
-      io.to(roomId).emit('game-update', game)
+      const remaining = game.players.filter(p => !p.folded)
+      if (remaining.length <= 1) {
+        const gameOverData = getGameOverData(roomId)
+        if (gameOverData) io.to(roomId).emit('game-over', gameOverData)
+      } else {
+        io.to(roomId).emit('game-update', game)
+      }
     }
   })
 
@@ -124,9 +130,25 @@ function setupSocketEvents(io: Server) {
     socket.on('leave-room', () => {
       const { roomId, playerId } = socket.data
       if (roomId && playerId) {
-        leaveRoom(roomId, playerId)
-        socket.leave(roomId)
-        io!.to(roomId).emit('player-left', { playerId })
+        const game = getGame(roomId)
+        const room = getRoom(roomId)
+
+        if (game && room && room.started) {
+          const result = removePlayerFromGame(roomId, playerId)
+          leaveRoom(roomId, playerId)
+          socket.leave(roomId)
+          io!.to(roomId).emit('player-left', { playerId })
+          io!.to(roomId).emit('game-update', getGame(roomId)!)
+          if (result?.gameOver) {
+            const gameOverData = getGameOverData(roomId)
+            if (gameOverData) io!.to(roomId).emit('game-over', gameOverData)
+          }
+        } else {
+          leaveRoom(roomId, playerId)
+          socket.leave(roomId)
+          io!.to(roomId).emit('player-left', { playerId })
+        }
+
         socket.data.roomId = null
         socket.data.playerId = null
       }

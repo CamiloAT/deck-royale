@@ -132,12 +132,10 @@ function kickPlayer(roomId: string, playerId: string) {
   const room = rooms.get(roomId)
 
   if (game) {
-    game.players = game.players.filter(p => p.id !== playerId)
-    if (game.players.length < 2) {
-      cancelTurnTimer(roomId)
-      pausedTurnRemaining.delete(roomId)
+    const result = removePlayerFromGame(roomId, playerId)
+    if (onPlayerKicked) {
+      onPlayerKicked(roomId, playerId)
     }
-    games.set(roomId, game)
   }
 
   if (room) {
@@ -146,10 +144,6 @@ function kickPlayer(roomId: string, playerId: string) {
       deleteRoom(roomId)
       return
     }
-  }
-
-  if (onPlayerKicked) {
-    onPlayerKicked(roomId, playerId)
   }
 }
 
@@ -193,10 +187,20 @@ export function joinRoom(roomId: string, nickname: string, chips: number): { roo
   if (room.players.length >= room.maxPlayers) return { error: 'Sala llena' }
   if (room.started) return { error: 'La partida ya comenzó' }
 
+  let finalNickname = nickname
+  const existingNames = room.players.map(p => p.nickname.toLowerCase())
+  if (existingNames.includes(nickname.toLowerCase())) {
+    let counter = 1
+    while (existingNames.includes(`${nickname}(${counter})`.toLowerCase())) {
+      counter++
+    }
+    finalNickname = `${nickname}(${counter})`
+  }
+
   const id = generatePlayerId()
   const player: Player = {
     id,
-    nickname,
+    nickname: finalNickname,
     chips,
     hand: [],
     bet: 0,
@@ -221,6 +225,70 @@ export function leaveRoom(roomId: string, playerId: string): void {
   if (room.players.length === 0) {
     deleteRoom(roomId)
   }
+}
+
+export function removePlayerFromGame(roomId: string, playerId: string): { gameOver: boolean; winnerId?: string } | null {
+  const game = games.get(roomId)
+  if (!game) return null
+
+  const player = game.players.find(p => p.id === playerId)
+  if (!player) return null
+
+  if (player.isTurn) {
+    cancelTurnTimer(roomId)
+  }
+
+  game.players = game.players.filter(p => p.id !== playerId)
+
+  const remaining = game.players.filter(p => !p.folded)
+
+  if (remaining.length <= 1) {
+    cancelTurnTimer(roomId)
+    pausedTurnRemaining.delete(roomId)
+
+    if (remaining.length === 1) {
+      const winner = remaining[0]
+      const totalBetSum = game.pots.reduce((sum, pot) => sum + pot.amount, 0)
+      const winnerIdx = game.players.findIndex(p => p.id === winner.id)
+      game.players[winnerIdx] = {
+        ...game.players[winnerIdx],
+        chips: game.players[winnerIdx].chips + totalBetSum,
+      }
+
+      const handResult: HandResult = {
+        handNumber: game.handNumber,
+        winnerId: winner.id,
+        winnerNickname: winner.nickname,
+        amountWon: totalBetSum,
+        foldedPlayers: [],
+        communityCards: [...game.communityCards],
+        finalChips: Object.fromEntries(game.players.map(p => [p.id, p.chips])),
+      }
+      game.handHistory = [...game.handHistory, handResult]
+      game.handNumber++
+
+      game.phase = 'showdown'
+      games.set(roomId, game)
+
+      return { gameOver: true, winnerId: winner.id }
+    }
+
+    game.phase = 'showdown'
+    games.set(roomId, game)
+    return { gameOver: true }
+  }
+
+  if (player.isTurn) {
+    const nextIdx = nextActivePlayer(game.players, -1)
+    if (nextIdx !== -1) {
+      game.players[nextIdx] = { ...game.players[nextIdx], isTurn: true }
+      game.currentPlayerIndex = nextIdx
+      startTurnTimer(roomId, game.players[nextIdx].id)
+    }
+  }
+
+  games.set(roomId, game)
+  return { gameOver: false }
 }
 
 export function startGame(roomId: string): GameState | null {

@@ -153,7 +153,7 @@ export function useGame() {
         } else {
           state.room = response.room
           state.player = response.player
-          saveSession(response.room.id, response.player.id, data.nickname)
+          saveSession(response.room.id, response.player.id, response.player.nickname)
           resolve(response)
         }
       })
@@ -172,7 +172,7 @@ export function useGame() {
         } else {
           state.room = response.room
           state.player = response.player
-          saveSession(data.roomId, response.player.id, data.nickname)
+          saveSession(data.roomId, response.player.id, response.player.nickname)
           resolve(response)
         }
       })
