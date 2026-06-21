@@ -61,7 +61,7 @@ watch(() => props.gameState.phase, (phase) => {
   <GameVictory
     v-if="showVictory && latestHandResult"
     :winner-nickname="latestHandResult.winners[0]?.winnerNickname ?? ''"
-    :amount-won="latestHandResult.winners.reduce((sum, w) => sum + w.amountWon, 0)"
+    :amount-won="latestHandResult.winners.filter(w => w.winnerId === latestHandResult.winners[0]?.winnerId).reduce((sum, w) => sum + w.amountWon, 0)"
     @done="showVictory = false"
   />
   <div class="poker-table">

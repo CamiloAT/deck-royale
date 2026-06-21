@@ -567,7 +567,7 @@ export function performAction(
 
       const mainWinner = potWinners[0]
       const winnerName = mainWinner?.winnerNickname ?? '?'
-      const totalWon = potWinners.reduce((sum, w) => sum + w.amountWon, 0)
+      const totalWon = mainWinner ? potWinners.filter(w => w.winnerId === mainWinner.winnerId).reduce((sum, w) => sum + w.amountWon, 0) : 0
       return {
         game,
         message: `${winnerName} gana ${totalWon}!`,
@@ -602,7 +602,7 @@ export function performAction(
 
       const mainWinner = potWinners[0]
       const winnerName = mainWinner?.winnerNickname ?? '?'
-      const totalWon = potWinners.reduce((sum, w) => sum + w.amountWon, 0)
+      const totalWon = mainWinner ? potWinners.filter(w => w.winnerId === mainWinner.winnerId).reduce((sum, w) => sum + w.amountWon, 0) : 0
       return {
         game,
         message: `${winnerName} gana ${totalWon}!`,
