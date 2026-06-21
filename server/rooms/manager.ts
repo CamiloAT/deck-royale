@@ -297,8 +297,11 @@ export function startGame(roomId: string): GameState | null {
 
   room.started = true
 
+  const eligiblePlayers = room.players.filter(p => p.chips > 0)
+  if (eligiblePlayers.length < 2) return null
+
   const deck = shuffleDeck(createDeck())
-  const players = room.players.map((p, i) => initPlayerState(p, i, i === 0))
+  const players = eligiblePlayers.map((p, i) => initPlayerState(p, i, i === 0))
 
   const blinds = room.bigBlind
   const smallBlinds = room.smallBlind
@@ -374,7 +377,7 @@ export function performAction(
 
   const player = game.players[playerIndex]
   if (!player.isTurn) return { error: 'No es tu turno' }
-  if (player.folded || player.allIn) return { error: 'No puedes actuar' }
+  if (player.folded || player.allIn || player.chips === 0) return { error: 'No puedes actuar' }
 
   cancelTurnTimer(roomId)
 
@@ -520,7 +523,9 @@ export function performAction(
   } else if (game.lastAggressorIndex !== -1) {
     shouldAdvance = nextPlayerIdx === game.lastAggressorIndex
   } else {
-    shouldAdvance = nextPlayerIdx === game.firstActorIndex
+    const searchFrom = (game.firstActorIndex - 1 + updatedPlayers.length) % updatedPlayers.length
+    const effectiveFirstActor = nextActivePlayer(updatedPlayers, searchFrom)
+    shouldAdvance = effectiveFirstActor !== -1 && nextPlayerIdx === effectiveFirstActor
   }
 
   if (shouldAdvance) {
@@ -725,6 +730,19 @@ export function nextHand(roomId: string): GameState | null {
     hand: [] as Card[],
   }))
 
+  const eliminatedPlayers = game.players
+    .filter(p => p.chips <= 0)
+    .map(p => ({
+      ...p,
+      hand: [] as Card[],
+      bet: 0,
+      totalBet: 0,
+      folded: true,
+      allIn: false,
+      isDealer: false,
+      isTurn: false,
+    }))
+
   const newDealerIndex = (game.dealerIndex + 1) % players.length
 
   const blinds = room.bigBlind
@@ -756,9 +774,11 @@ export function nextHand(roomId: string): GameState | null {
   const { players: dealtPlayers, remainingDeck } = dealHoleCards(players, deck)
   const firstActor = (bbIndex + 1) % players.length
 
+  const allPlayers = [...dealtPlayers, ...eliminatedPlayers]
+
   const newGame: GameState = {
     roomId,
-    players: dealtPlayers,
+    players: allPlayers,
     deck: remainingDeck,
     communityCards: [],
     phase: 'preflop',

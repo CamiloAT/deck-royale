@@ -72,6 +72,7 @@ watch(() => props.turnStartedAt, () => {
       'player-seat--folded': player.folded,
       'player-seat--all-in': player.allIn,
       'player-seat--winner': isWinner,
+      'player-seat--eliminated': player.chips === 0 && !player.folded && !player.allIn,
     }"
   >
     <GamePlayerAvatar :player="player" :is-myself="isMyself" />
@@ -89,8 +90,9 @@ watch(() => props.turnStartedAt, () => {
       {{ player.bet.toLocaleString() }}
     </div>
 
-    <div v-if="player.folded" class="player-seat__status">Fold</div>
-    <div v-if="player.allIn" class="player-seat__status player-seat__status--all-in">ALL IN</div>
+    <div v-if="player.chips === 0 && !player.allIn" class="player-seat__status player-seat__status--eliminated">Eliminado</div>
+    <div v-else-if="player.allIn" class="player-seat__status player-seat__status--all-in">ALL IN</div>
+    <div v-else-if="player.folded" class="player-seat__status">Fold</div>
     <div v-if="player.isTurn && !isMyself" class="player-seat__turn-indicator">
       <Timer :size="10" class="player-seat__turn-timer-icon" />
       Turno
@@ -118,6 +120,7 @@ watch(() => props.turnStartedAt, () => {
 .player-seat--active { border-color: #ffd700; box-shadow: 0 0 12px rgba(255, 215, 0, 0.4); }
 .player-seat--myself { background: rgba(0, 100, 0, 0.3); border-color: #00aa00; }
 .player-seat--folded { opacity: 0.5; }
+.player-seat--eliminated { opacity: 0.5; border-color: #666; }
 .player-seat--all-in { border-color: #ff4444; box-shadow: 0 0 12px rgba(255, 68, 68, 0.5); }
 .player-seat--winner {
   border-color: #ffd700 !important;
@@ -148,6 +151,7 @@ watch(() => props.turnStartedAt, () => {
 
 .player-seat__status { color: #ff6666; font-size: 9px; font-weight: bold; text-transform: uppercase; }
 .player-seat__status--all-in { color: #ff4444; font-size: 11px; animation: pulse 1s infinite; }
+.player-seat__status--eliminated { color: #888; font-size: 9px; background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 6px; }
 .player-seat__turn-indicator { color: #00ff00; font-size: 9px; font-weight: bold; animation: pulse 1s infinite; display: flex; align-items: center; gap: 3px; }
 .player-seat__turn-timer-icon { animation: spin 2s linear infinite; }
 .player-seat__countdown { color: #ef4444; font-size: 10px; font-weight: 700; font-variant-numeric: tabular-nums; animation: timerPulse 1s ease-in-out infinite; }

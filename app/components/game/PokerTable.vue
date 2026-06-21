@@ -120,8 +120,24 @@ watch(() => props.gameState.phase, (phase) => {
       </div>
     </div>
 
-    <!-- My area at the bottom -->
-    <div v-if="myPlayer" class="poker-table__my-area">
+    <!-- My area at the bottom - eliminated view -->
+    <div v-if="myPlayer && myPlayer.chips === 0 && !myPlayer.allIn && gameState.phase !== 'showdown'" class="poker-table__my-area">
+      <GamePlayerSeat
+        :player="myPlayer"
+        :is-active="false"
+        :is-myself="true"
+        :is-winner="false"
+      />
+
+      <div class="poker-table__eliminated">
+        <div class="poker-table__eliminated-text">Has sido eliminado de esta partida</div>
+        <div class="poker-table__eliminated-sub">Puedes seguir observando la partida</div>
+        <button class="poker-table__eliminated-btn" @click="showLeaveModal = true">Salir al lobby</button>
+      </div>
+    </div>
+
+    <!-- My area at the bottom - active view -->
+    <div v-else-if="myPlayer" class="poker-table__my-area">
       <div class="poker-table__my-info">
         <GamePlayerSeat
           :player="myPlayer"
@@ -142,7 +158,7 @@ watch(() => props.gameState.phase, (phase) => {
       </div>
 
       <GameBetControls
-        v-if="myPlayer && !myPlayer.folded && gameState.phase !== 'showdown' && gameState.phase !== 'waiting'"
+        v-if="!myPlayer.folded && gameState.phase !== 'showdown' && gameState.phase !== 'waiting'"
         :current-bet="gameState.currentBet"
         :min-raise="minRaise"
         :player-chips="myPlayer.chips"
@@ -298,6 +314,50 @@ watch(() => props.gameState.phase, (phase) => {
 .poker-table__timer {
   display: flex;
   justify-content: center;
+}
+
+.poker-table__eliminated {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: #ff6666;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 12px 18px;
+  background: rgba(220, 38, 38, 0.1);
+  border-radius: 10px;
+  border: 1px solid rgba(220, 38, 38, 0.25);
+  animation: eliminatedPulse 2s ease-in-out infinite;
+}
+.poker-table__eliminated-text {
+  letter-spacing: 1px;
+}
+.poker-table__eliminated-sub {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.poker-table__eliminated-btn {
+  padding: 6px 14px;
+  border: 1px solid rgba(220, 38, 38, 0.4);
+  background: rgba(220, 38, 38, 0.15);
+  color: #ff6666;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.poker-table__eliminated-btn:hover {
+  background: rgba(220, 38, 38, 0.3);
+  border-color: rgba(220, 38, 38, 0.6);
+  color: white;
+}
+@keyframes eliminatedPulse {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; }
 }
 
 @keyframes pulse {
