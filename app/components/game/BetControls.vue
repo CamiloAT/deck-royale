@@ -91,10 +91,6 @@ function handleAllIn() {
   emit('action', 'all_in')
 }
 
-function handleCheckCall() {
-  emit('action', props.canCheck ? 'check' : 'call')
-}
-
 watch(() => props.currentBet, () => {
   chipsSelected.value = { 50: 0, 100: 0, 200: 0, 500: 0, 1000: 0, 2000: 0 }
 })
@@ -111,9 +107,9 @@ watch(() => props.playerChips, () => {
       Foldear
     </button>
 
-    <button class="bet-controls__btn bet-controls__btn--check" @click="handleCheckCall" :disabled="disabled">
+    <button class="bet-controls__btn bet-controls__btn--check" @click="emit('action', 'check')" :disabled="disabled || !canCheck">
       <Check :size="14" />
-      {{ canCheck ? 'Pasar' : `Igualar $${callAmount.toLocaleString()}` }}
+      Pasar
     </button>
 
     <div class="bet-controls__center">
