@@ -71,6 +71,13 @@ export function useGame() {
             state.gameState = response.game
             state.player = response.player
             state.room = null
+          } else {
+            socket.emit('rejoin-room', { roomId: session.roomId, nickname: session.nickname }, (roomResponse: any) => {
+              if (!roomResponse.error) {
+                state.room = roomResponse.room
+                state.player = roomResponse.player
+              }
+            })
           }
         })
       }

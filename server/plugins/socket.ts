@@ -218,6 +218,28 @@ function setupSocketEvents(io: Server) {
       } catch (e: any) { callback({ error: e.message }) }
     })
 
+    socket.on('rejoin-room', (data: any, callback: any) => {
+      try {
+        const { roomId, nickname } = data
+        if (!roomId || !nickname) { callback({ error: 'Datos incompletos' }); return }
+
+        const room = getRoom(roomId)
+        if (!room) { callback({ error: 'Sala no encontrada' }); return }
+        if (room.started) { callback({ error: 'La partida ya comenzó' }); return }
+
+        const existingPlayer = room.players.find(p => p.nickname.toLowerCase() === nickname.toLowerCase())
+        if (!existingPlayer) { callback({ error: 'Jugador no encontrado en la sala' }); return }
+
+        existingPlayer.isConnected = true
+        socket.join(roomId)
+        socket.data.roomId = roomId
+        socket.data.playerId = existingPlayer.id
+
+        callback({ room, player: existingPlayer })
+        io!.to(roomId).emit('room-update', room)
+      } catch (e: any) { callback({ error: e.message }) }
+    })
+
     socket.on('start-game', (callback: any) => {
       try {
         const roomId = socket.data.roomId
