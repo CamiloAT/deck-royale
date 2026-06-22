@@ -5,6 +5,7 @@ const props = defineProps<{
   card: Card
   faceDown?: boolean
   small?: boolean
+  dimmed?: boolean
 }>()
 
 const suitSymbol = computed(() => {
@@ -28,6 +29,7 @@ const suitColor = computed(() => {
     :class="{
       'card--face-down': faceDown,
       'card--small': small,
+      'card--dimmed': dimmed,
     }"
   >
     <template v-if="!faceDown">
@@ -116,6 +118,11 @@ const suitColor = computed(() => {
 }
 .card--small .card--face-down .card__back-text {
   font-size: 8px;
+}
+
+.card--dimmed {
+  opacity: 0.25;
+  filter: saturate(0.3);
 }
 
 /* Corners */

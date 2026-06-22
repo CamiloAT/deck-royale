@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Crown, Diamond, Heart, Club, Spade, Clock, LogOut, Flag } from '@lucide/vue'
+import { Crown, Diamond, Heart, Club, Spade, Clock, LogOut, Flag, HelpCircle } from '@lucide/vue'
 import type { GameState } from '../../types/poker'
 
 const props = defineProps<{
@@ -64,6 +64,7 @@ const latestHandResult = computed(() => {
 
 const showVictory = ref(false)
 const showLeaveModal = ref(false)
+const showHelpModal = ref(false)
 
 watch(() => props.gameState.phase, (phase) => {
   if (phase === 'showdown' && latestHandResult.value) {
@@ -80,6 +81,11 @@ watch(() => props.gameState.phase, (phase) => {
     @done="showVictory = false"
   />
   <div class="poker-table">
+    <!-- Help button -->
+    <button class="poker-table__help" @click="showHelpModal = true" title="Reglas de poker">
+      <HelpCircle :size="16" />
+    </button>
+
     <!-- Leave button -->
     <button class="poker-table__leave" @click="showLeaveModal = true" title="Salir de la partida">
       <LogOut :size="16" />
@@ -219,6 +225,14 @@ watch(() => props.gameState.phase, (phase) => {
       </div>
     </div>
   </Teleport>
+
+  <!-- Help modal -->
+  <GameHelpModal
+    v-if="showHelpModal"
+    :turn-started-at="isMyTurn ? gameState.turnStartedAt : undefined"
+    :turn-timer="isMyTurn ? gameState.turnTimer : undefined"
+    @close="showHelpModal = false"
+  />
 </template>
 
 <style scoped>
@@ -439,6 +453,21 @@ watch(() => props.gameState.phase, (phase) => {
   border-color: rgba(255, 215, 0, 0.5);
 }
 
+.poker-table__help {
+  position: absolute; top: 12px; left: 56px;
+  background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px; width: 36px; height: 36px;
+  color: rgba(255, 255, 255, 0.5);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all 0.2s;
+  backdrop-filter: blur(8px);
+}
+.poker-table__help:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #fff;
+}
+
 .leave-modal {
   position: fixed;
   inset: 0;
@@ -550,6 +579,10 @@ watch(() => props.gameState.phase, (phase) => {
   }
   .poker-table__end-game {
     top: 8px; left: 8px;
+    width: 32px; height: 32px;
+  }
+  .poker-table__help {
+    top: 8px; left: 48px;
     width: 32px; height: 32px;
   }
 }
