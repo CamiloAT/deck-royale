@@ -58,7 +58,12 @@ function handleLeaveGameEnd() {
   <div class="app">
     <div v-if="error" class="error-toast" @click="error = ''">{{ error }}</div>
 
-    <div v-if="state.connected === false" class="loading">Conectando al servidor...</div>
+    <div v-if="state.connected === false" class="loading">
+      <img :src="'/images/logo.png'" alt="Deck Royale" class="loading__logo" />
+      <div class="loading__brand">DECK<span>ROYALE</span></div>
+      <div class="loading__spinner" />
+      <div class="loading__text">Cargando...</div>
+    </div>
 
     <GameEntry v-if="state.showEntry" @done="onEntryDone" />
 
@@ -103,7 +108,19 @@ function handleLeaveGameEnd() {
 
 <style scoped>
 .app { min-height: 100vh; background: transparent; }
-.loading { min-height: 100vh; display: flex; align-items: center; justify-content: center; color: #888; font-size: 18px; }
+.loading { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; }
+.loading__logo { width: 64px; height: 64px; object-fit: contain; opacity: 0.6; filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.2)); }
+.loading__brand { font-family: 'Georgia', serif; font-size: 28px; letter-spacing: 2px; color: #ffd700; }
+.loading__brand span { color: white; font-weight: 300; }
+.loading__spinner {
+  width: 32px; height: 32px;
+  border: 3px solid rgba(255, 215, 0, 0.15);
+  border-top-color: #ffd700;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+.loading__text { color: #666; font-size: 14px; letter-spacing: 2px; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
 .error-toast {
   position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
