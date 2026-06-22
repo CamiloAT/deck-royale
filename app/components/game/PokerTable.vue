@@ -79,6 +79,7 @@ watch(() => props.gameState.phase, (phase) => {
         :is-active="player.isTurn"
         :is-myself="false"
         :is-winner="latestHandResult?.winners?.some(w => w.winnerId === player.id) && gameState.phase === 'showdown'"
+        :show-cards="gameState.phase === 'showdown' && !player.folded"
         :turn-started-at="player.isTurn ? gameState.turnStartedAt : undefined"
         :turn-timer="player.isTurn ? gameState.turnTimer : undefined"
       />

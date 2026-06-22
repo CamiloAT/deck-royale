@@ -7,6 +7,7 @@ const props = defineProps<{
   isActive?: boolean
   isMyself?: boolean
   isWinner?: boolean
+  showCards?: boolean
   turnStartedAt?: number
   turnTimer?: number
 }>()
@@ -90,6 +91,10 @@ watch(() => props.turnStartedAt, () => {
       {{ player.bet.toLocaleString() }}
     </div>
 
+    <div v-if="showCards && player.hand.length > 0" class="player-seat__showdown-hand">
+      <GameCard v-for="(card, i) in player.hand" :key="i" :card="card" small />
+    </div>
+
     <div v-if="player.chips === 0 && !player.allIn" class="player-seat__status player-seat__status--eliminated">Eliminado</div>
     <div v-else-if="player.allIn" class="player-seat__status player-seat__status--all-in">ALL IN</div>
     <div v-else-if="player.folded" class="player-seat__status">Fold</div>
@@ -170,6 +175,18 @@ watch(() => props.turnStartedAt, () => {
 
 .player-seat__disconnect-icon {
   font-size: 10px;
+}
+
+.player-seat__showdown-hand {
+  display: flex;
+  gap: 2px;
+  justify-content: center;
+  animation: revealCards 0.4s ease-out;
+}
+
+@keyframes revealCards {
+  from { opacity: 0; transform: scale(0.8) translateY(-4px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 @keyframes disconnectPulse {
