@@ -409,7 +409,7 @@ const particles = Array.from({ length: 18 }, (_, i) => {
 }
 
 .lobby__row { display: flex; gap: 12px; }
-.lobby__field { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+.lobby__field { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
 .lobby__row .lobby__field { max-width: 163px; }
 .lobby__field label {
   color: #777;
@@ -477,5 +477,10 @@ const particles = Array.from({ length: 18 }, (_, i) => {
   letter-spacing: 2px;
   margin: 24px 0 0 0;
   animation: fadeIn 0.8s ease-out 0.6s both;
+}
+
+@media (max-width: 768px) {
+  .lobby__row { flex-direction: column; gap: 10px; }
+  .lobby__row .lobby__field { max-width: 100%; }
 }
 </style>
