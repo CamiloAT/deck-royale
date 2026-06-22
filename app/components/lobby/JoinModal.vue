@@ -120,7 +120,8 @@ const particles = Array.from({ length: 18 }, (_, i) => {
           <Club :size="20" class="lobby__suit lobby__suit--club" />
         </div>
         <h1 class="lobby__title">
-          <span class="lobby__title-deck">DECK</span><span class="lobby__title-royale">ROYALE</span>
+          <span class="lobby__title-deck">DECK</span>
+          <span class="lobby__title-royale">ROYALE</span>
         </h1>
         <div class="lobby__divider">
           <span class="lobby__divider-line"></span>
@@ -286,10 +287,14 @@ const particles = Array.from({ length: 18 }, (_, i) => {
 
 .lobby__title {
   margin: 0 0 12px 0;
-  font-size: 42px;
+  font-size: clamp(28px, 10vw, 42px);
   font-family: 'Georgia', serif;
   letter-spacing: 2px;
-  line-height: 1;
+  line-height: 1.1;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0 6px;
 }
 .lobby__title-deck {
   color: #ffd700;
