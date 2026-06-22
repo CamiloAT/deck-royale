@@ -86,14 +86,14 @@ watch(() => props.gameState.phase, (phase) => {
       <HelpCircle :size="16" />
     </button>
 
-    <!-- Leave button -->
-    <button class="poker-table__leave" @click="showLeaveModal = true" title="Salir de la partida">
-      <LogOut :size="16" />
-    </button>
-
     <!-- End game button (host only) -->
     <button v-if="canEndGame" class="poker-table__end-game" @click="showEndGameConfirm = true" title="Terminar partida">
       <Flag :size="16" />
+    </button>
+
+    <!-- Leave button -->
+    <button class="poker-table__leave" @click="showLeaveModal = true" title="Salir de la partida">
+      <LogOut :size="16" />
     </button>
 
     <!-- Other players at the top -->
@@ -440,9 +440,10 @@ watch(() => props.gameState.phase, (phase) => {
 }
 
 .poker-table__end-game {
-  position: absolute; top: 12px; left: 12px;
-  background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 215, 0, 0.3);
-  border-radius: 8px; width: 36px; height: 36px;
+  position: fixed; top: 12px; left: 56px; z-index: 100;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(255, 215, 0, 0.3);
   color: #ffd700;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; transition: all 0.2s;
@@ -454,9 +455,10 @@ watch(() => props.gameState.phase, (phase) => {
 }
 
 .poker-table__help {
-  position: absolute; top: 12px; left: 56px;
-  background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 8px; width: 36px; height: 36px;
+  position: fixed; top: 12px; left: 12px; z-index: 100;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(255, 255, 255, 0.15);
   color: rgba(255, 255, 255, 0.5);
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; transition: all 0.2s;
@@ -578,11 +580,11 @@ watch(() => props.gameState.phase, (phase) => {
     font-size: 10px;
   }
   .poker-table__end-game {
-    top: 8px; left: 8px;
+    top: 8px; left: 48px;
     width: 32px; height: 32px;
   }
   .poker-table__help {
-    top: 8px; left: 48px;
+    top: 8px; left: 8px;
     width: 32px; height: 32px;
   }
 }
