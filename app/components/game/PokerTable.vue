@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Crown, Diamond, Heart, Club, Spade, Clock, LogOut } from '@lucide/vue'
+import { Crown, Diamond, Heart, Club, Spade, Clock, LogOut, Flag } from '@lucide/vue'
 import type { GameState } from '../../types/poker'
 
 const props = defineProps<{
@@ -12,11 +12,26 @@ const emit = defineEmits<{
   (e: 'leave'): void
 }>()
 
-const { state } = useGame()
+const { state, endGame } = useGame()
 
 const myPlayer = computed(() =>
   props.gameState.players.find(p => p.id === props.myPlayerId)
 )
+
+const isHost = computed(() => props.gameState.hostId === props.myPlayerId)
+const canEndGame = computed(() => isHost.value && props.gameState.canEndHand)
+const showEndGameConfirm = ref(false)
+const endGameError = ref('')
+
+async function handleEndGame() {
+  const result = await endGame()
+  if ('error' in result) {
+    endGameError.value = result.error
+  } else {
+    showEndGameConfirm.value = false
+    endGameError.value = ''
+  }
+}
 
 const otherPlayers = computed(() =>
   props.gameState.players.filter(p => p.id !== props.myPlayerId)
@@ -68,6 +83,11 @@ watch(() => props.gameState.phase, (phase) => {
     <!-- Leave button -->
     <button class="poker-table__leave" @click="showLeaveModal = true" title="Salir de la partida">
       <LogOut :size="16" />
+    </button>
+
+    <!-- End game button (host only) -->
+    <button v-if="canEndGame" class="poker-table__end-game" @click="showEndGameConfirm = true" title="Terminar partida">
+      <Flag :size="16" />
     </button>
 
     <!-- Other players at the top -->
@@ -180,6 +200,21 @@ watch(() => props.gameState.phase, (phase) => {
         <div class="leave-modal__actions">
           <button class="leave-modal__btn leave-modal__btn--cancel" @click="showLeaveModal = false">Cancelar</button>
           <button class="leave-modal__btn leave-modal__btn--confirm" @click="emit('leave')">Salir</button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
+
+  <!-- End game confirmation modal -->
+  <Teleport to="body">
+    <div v-if="showEndGameConfirm" class="leave-modal">
+      <div class="leave-modal__card">
+        <div class="leave-modal__title">Terminar partida</div>
+        <div class="leave-modal__text">Quieres terminar la partida? Se devolverán las ciegas y se mostrarán las estadísticas finales.</div>
+        <div v-if="endGameError" class="leave-modal__error">{{ endGameError }}</div>
+        <div class="leave-modal__actions">
+          <button class="leave-modal__btn leave-modal__btn--cancel" @click="showEndGameConfirm = false; endGameError = ''">Cancelar</button>
+          <button class="leave-modal__btn leave-modal__btn--confirm" @click="handleEndGame">Terminar</button>
         </div>
       </div>
     </div>
@@ -390,6 +425,20 @@ watch(() => props.gameState.phase, (phase) => {
   color: #ff6666;
 }
 
+.poker-table__end-game {
+  position: absolute; top: 12px; left: 12px;
+  background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 8px; width: 36px; height: 36px;
+  color: #ffd700;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all 0.2s;
+  backdrop-filter: blur(8px);
+}
+.poker-table__end-game:hover {
+  background: rgba(255, 215, 0, 0.2);
+  border-color: rgba(255, 215, 0, 0.5);
+}
+
 .leave-modal {
   position: fixed;
   inset: 0;
@@ -454,6 +503,17 @@ watch(() => props.gameState.phase, (phase) => {
   box-shadow: 0 4px 16px rgba(220, 38, 38, 0.4);
 }
 
+.leave-modal__error {
+  color: #f59e0b;
+  font-size: 13px;
+  text-align: center;
+  padding: 8px 12px;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 8px;
+  width: 100%;
+}
+
 /* === MOBILE === */
 @media (max-width: 768px) {
   .poker-table {
@@ -487,6 +547,10 @@ watch(() => props.gameState.phase, (phase) => {
   }
   .poker-table__turn-info {
     font-size: 10px;
+  }
+  .poker-table__end-game {
+    top: 8px; left: 8px;
+    width: 32px; height: 32px;
   }
 }
 </style>

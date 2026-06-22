@@ -251,6 +251,14 @@ export function useGame() {
     })
   }
 
+  function endGame(): Promise<{ success: boolean } | { error: string }> {
+    return new Promise((resolve) => {
+      socket.emit('end-game', (response: any) => {
+        resolve(response)
+      })
+    })
+  }
+
   return {
     state: readonly(state),
     connect,
@@ -262,6 +270,7 @@ export function useGame() {
     requestGameState,
     updateRoom,
     rejoinGame,
+    endGame,
     clearGameOver,
     onEntryDone,
     onTransitionDone,

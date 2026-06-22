@@ -69,6 +69,8 @@ export interface GameState {
   firstActorIndex: number
   handNumber: number
   handHistory: HandResult[]
+  canEndHand: boolean
+  hostId: string
 }
 
 export interface Room {

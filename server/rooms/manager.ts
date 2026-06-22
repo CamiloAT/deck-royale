@@ -359,6 +359,8 @@ export function startGame(roomId: string): GameState | null {
     firstActorIndex: firstActor,
     handNumber: 1,
     handHistory: [],
+    canEndHand: true,
+    hostId: room.players[0]?.id ?? '',
   }
 
   game.players[game.currentPlayerIndex] = {
@@ -392,6 +394,8 @@ export function performAction(
   if (player.folded || player.allIn || player.chips === 0) return { error: 'No puedes actuar' }
 
   cancelTurnTimer(roomId)
+
+  game.canEndHand = false
 
   let updatedPlayers = [...game.players]
   let updatedPots = [...game.pots]
@@ -792,6 +796,38 @@ export function getGameOverData(roomId: string): { players: { id: string; nickna
   }
 }
 
+export function endGameByHost(roomId: string, playerId: string): { error: string } | null {
+  const room = rooms.get(roomId)
+  const game = games.get(roomId)
+  if (!room || !game) return { error: 'Partida no encontrada' }
+
+  if (room.players[0]?.id !== playerId) return { error: 'Solo el anfitrión puede terminar la partida' }
+  if (!game.canEndHand) return { error: 'No se puede terminar en mitad de una ronda' }
+
+  cancelTurnTimer(roomId)
+  pausedTurnRemaining.delete(roomId)
+
+  for (let i = 0; i < game.players.length; i++) {
+    const p = game.players[i]
+    if (p.bet > 0) {
+      game.players[i] = { ...p, chips: p.chips + p.bet, bet: 0, totalBet: 0 }
+    }
+  }
+  game.pots = []
+
+  const handResult: HandResult = {
+    handNumber: game.handNumber,
+    winners: [],
+    foldedPlayers: [],
+    communityCards: [...game.communityCards],
+    finalChips: Object.fromEntries(game.players.map(p => [p.id, p.chips])),
+    playerBets: Object.fromEntries(game.players.map(p => [p.id, p.totalBet])),
+  }
+  game.handHistory = [...game.handHistory, handResult]
+
+  return null
+}
+
 export function nextHand(roomId: string): GameState | null {
   const room = rooms.get(roomId)
   const game = games.get(roomId)
@@ -878,6 +914,8 @@ export function nextHand(roomId: string): GameState | null {
     firstActorIndex: firstActor,
     handNumber,
     handHistory,
+    canEndHand: true,
+    hostId: game.hostId,
   }
 
   newGame.players[newGame.currentPlayerIndex] = {

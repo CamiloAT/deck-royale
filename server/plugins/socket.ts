@@ -4,7 +4,7 @@ import {
   hasGameEnded, getGameOverData, nextHand, advanceAllInRunout, resolveAllInShowdown,
   cancelTurnTimer, pauseTurnTimer, resumeTurnTimer,
   startDisconnectTimer, cancelDisconnectTimer,
-  setOnAutoFold, setOnPlayerKicked,
+  setOnAutoFold, setOnPlayerKicked, endGameByHost,
 } from '../rooms/manager'
 import type { GameState } from '../../types/poker'
 
@@ -225,6 +225,18 @@ function setupSocketEvents(io: Server) {
         const game = startGame(roomId)
         if (!game) { callback({ error: 'Minimo 2 jugadores para iniciar' }); return }
         io!.to(roomId).emit('game-started', game)
+        callback({ success: true })
+      } catch (e: any) { callback({ error: e.message }) }
+    })
+
+    socket.on('end-game', (callback: any) => {
+      try {
+        const { roomId, playerId } = socket.data
+        if (!roomId || !playerId) { callback({ error: 'No estas en una sala' }); return }
+        const result = endGameByHost(roomId, playerId)
+        if (result && 'error' in result) { callback({ error: result.error }); return }
+        const gameOverData = getGameOverData(roomId)
+        io!.to(roomId).emit('game-over', gameOverData)
         callback({ success: true })
       } catch (e: any) { callback({ error: e.message }) }
     })
