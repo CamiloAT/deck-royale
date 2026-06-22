@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Copy, Check, Spade, Heart, Diamond, Club, Play, LogOut, Users, Coins, Banknote, Wallet, Pencil, Link, QrCode } from '@lucide/vue'
+import { Copy, Check, Spade, Heart, Diamond, Club, Play, LogOut, Users, Coins, Banknote, Wallet, Pencil, Link, QrCode, Share } from '@lucide/vue'
 import QrcodeVue from 'qrcode.vue'
 import type { Room } from '../../types/poker'
 
@@ -49,6 +49,20 @@ const shareLink = computed(() =>
     ? `${window.location.origin}/?room=${props.room.id}`
     : ''
 )
+
+const canShare = computed(() =>
+  typeof navigator !== 'undefined'
+  && !!navigator.share
+  && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)
+)
+
+function nativeShare() {
+  navigator.share({
+    title: `Unirse a ${props.room.name}`,
+    text: 'Unete a mi partida de poker!',
+    url: shareLink.value,
+  }).catch(() => {})
+}
 
 async function copyCode() {
   try {
@@ -233,6 +247,10 @@ const particles = Array.from({ length: 18 }, (_, i) => {
             <Link :size="14" />
             <span>{{ linkCopied ? 'Copiado!' : 'Enlace' }}</span>
           </button>
+          <button v-if="canShare" class="waiting-room__secondary-btn" @click.stop="nativeShare" title="Compartir enlace">
+            <Share :size="14" />
+            <span>Compartir</span>
+          </button>
           <button class="waiting-room__secondary-btn" @click.stop="showQr = true" title="Ver QR para unirse">
             <QrCode :size="14" />
             <span>QR</span>
@@ -255,7 +273,11 @@ const particles = Array.from({ length: 18 }, (_, i) => {
             <div class="qr-modal__qr">
               <QrcodeVue :value="shareLink" :size="200" level="M" :foreground="'#ffffff'" :background="'transparent'" />
             </div>
-            <p class="qr-modal__hint">O copia el enlace</p>
+            <p class="qr-modal__hint">O comparte el enlace</p>
+            <button v-if="canShare" class="qr-modal__share" @click="nativeShare">
+              <Share :size="14" />
+              Compartir
+            </button>
             <button class="qr-modal__copy" @click="copyLink">
               <Link :size="14" />
               {{ linkCopied ? 'Copiado!' : shareLink }}
@@ -637,6 +659,26 @@ const particles = Array.from({ length: 18 }, (_, i) => {
   color: #666;
   font-size: 12px;
   margin: 0 0 10px 0;
+}
+.qr-modal__share {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 10px;
+  background: rgba(255, 215, 0, 0.15);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 8px;
+  color: #ffd700;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 8px;
+}
+.qr-modal__share:hover {
+  background: rgba(255, 215, 0, 0.25);
 }
 .qr-modal__copy {
   display: flex;
