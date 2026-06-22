@@ -231,9 +231,10 @@ const tabStyle = (tab: string) => ({
           class="end-modal__debt"
         >
           <span class="end-modal__debt-from">{{ debt.from }}</span>
-          <ArrowRightLeft :size="14" class="end-modal__debt-arrow" />
-          <span class="end-modal__debt-to">{{ debt.to }}</span>
+          <span class="end-modal__debt-text">le paga</span>
           <span class="end-modal__debt-amount">${{ debt.amount.toLocaleString() }}</span>
+          <span class="end-modal__debt-text">a</span>
+          <span class="end-modal__debt-to">{{ debt.to }}</span>
         </div>
       </div>
 
@@ -533,24 +534,25 @@ const tabStyle = (tab: string) => ({
 .end-modal__debt-from {
   color: #f87171;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
 }
 
-.end-modal__debt-arrow {
-  color: rgba(255, 255, 255, 0.3);
+.end-modal__debt-text {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 13px;
+  font-style: italic;
 }
 
 .end-modal__debt-to {
   color: #4ade80;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .end-modal__debt-amount {
-  margin-left: auto;
   color: #ffd700;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   font-family: monospace;
 }
 
