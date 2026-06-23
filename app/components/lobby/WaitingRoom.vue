@@ -12,10 +12,11 @@ const emit = defineEmits<{
   (e: 'start'): void
   (e: 'leave'): void
   (e: 'update-settings', data: { smallBlind?: number; bigBlind?: number; minBuyIn?: number }): void
+  (e: 'select-avatar', avatarType: string): void
 }>()
 
 const isHost = computed(() =>
-  props.room.players.length > 0 && props.room.players[0].id === props.currentPlayerId
+  props.room.players.length > 0 && props.room.players[0]!.id === props.currentPlayerId
 )
 
 const canStart = computed(() => props.room.players.length >= 2)
@@ -23,6 +24,9 @@ const canStart = computed(() => props.room.players.length >= 2)
 const copied = ref(false)
 const linkCopied = ref(false)
 const showQr = ref(false)
+const showAvatarPicker = ref(false)
+
+const myPlayer = computed(() => props.room.players.find(p => p.id === props.currentPlayerId))
 
 const editingField = ref<'smallBlind' | 'bigBlind' | 'minBuyIn' | null>(null)
 const editValue = ref(0)
@@ -220,8 +224,12 @@ const particles = Array.from({ length: 18 }, (_, i) => {
             :key="player.id"
             class="waiting-room__player"
           >
-            <div class="waiting-room__player-avatar">
-              {{ player.nickname.charAt(0).toUpperCase() }}
+            <div
+              class="waiting-room__player-avatar"
+              :class="{ 'waiting-room__player-avatar--clickable': player.id === currentPlayerId }"
+              @click="player.id === currentPlayerId && (showAvatarPicker = true)"
+            >
+              <GamePlayerAvatar :player="{ ...player, isTurn: false, folded: false, allIn: false, isConnected: true }" />
             </div>
             <span class="waiting-room__player-name">{{ player.nickname }}</span>
             <span v-if="index === 0" class="waiting-room__host-badge">Host</span>
@@ -286,6 +294,14 @@ const particles = Array.from({ length: 18 }, (_, i) => {
         </div>
       </Transition>
     </Teleport>
+
+    <!-- Avatar picker -->
+    <GameAvatarPicker
+      v-if="showAvatarPicker && myPlayer"
+      :player="myPlayer"
+      @select="(type) => emit('select-avatar', type)"
+      @close="showAvatarPicker = false"
+    />
   </div>
 </template>
 
@@ -498,17 +514,28 @@ const particles = Array.from({ length: 18 }, (_, i) => {
 }
 .waiting-room__player:hover { background: rgba(255, 255, 255, 0.07); }
 .waiting-room__player-avatar {
-  width: 36px;
-  height: 36px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #ffd700, #e6a800);
+  background: rgba(255, 255, 255, 0.05);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #1a1a00;
-  font-weight: bold;
-  font-size: 14px;
   flex-shrink: 0;
+  overflow: hidden;
+  transition: all 0.2s;
+}
+.waiting-room__player-avatar :deep(.avatar) {
+  transform: scale(0.55);
+  transform-origin: center center;
+}
+.waiting-room__player-avatar--clickable {
+  cursor: pointer;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+}
+.waiting-room__player-avatar--clickable:hover {
+  border-color: rgba(255, 215, 0, 0.5);
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.2);
 }
 .waiting-room__player-name { color: white; font-size: 15px; }
 .waiting-room__host-badge {

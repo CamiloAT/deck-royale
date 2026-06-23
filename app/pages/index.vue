@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const { state, connect, createRoom, joinRoom, leaveRoom, startGame, performAction, updateRoom, clearGameOver, onEntryDone, onTransitionDone } = useGame()
+const { state, connect, createRoom, joinRoom, leaveRoom, startGame, performAction, updateRoom, clearGameOver, onEntryDone, onTransitionDone, setAvatar } = useGame()
 
 connect()
 
@@ -45,6 +45,10 @@ function handleLeave() {
 async function handleUpdateSettings(data: any) {
   const result = await updateRoom(data)
   if ('error' in result) error.value = result.error
+}
+
+async function handleSelectAvatar(avatarType: string) {
+  await setAvatar(avatarType)
 }
 
 function handleLeaveGameEnd() {
@@ -94,6 +98,7 @@ function handleLeaveGameEnd() {
           @start="handleStart"
           @leave="handleLeave"
           @update-settings="handleUpdateSettings"
+          @select-avatar="handleSelectAvatar"
         />
       </template>
 

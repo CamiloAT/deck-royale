@@ -266,6 +266,14 @@ export function useGame() {
     })
   }
 
+  function setAvatar(avatarType: string): Promise<{ success: boolean } | { error: string }> {
+    return new Promise((resolve) => {
+      socket.emit('set-avatar', { avatarType }, (response: any) => {
+        resolve(response)
+      })
+    })
+  }
+
   return {
     state: readonly(state),
     connect,
@@ -278,6 +286,7 @@ export function useGame() {
     updateRoom,
     rejoinGame,
     endGame,
+    setAvatar,
     clearGameOver,
     onEntryDone,
     onTransitionDone,

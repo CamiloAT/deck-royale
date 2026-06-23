@@ -76,7 +76,7 @@ watch(() => props.turnStartedAt, () => {
       'player-seat--eliminated': player.chips === 0 && !player.folded && !player.allIn,
     }"
   >
-    <GamePlayerAvatar :player="player" :is-myself="isMyself" />
+    <GamePlayerAvatar :player="player" />
 
     <div class="player-seat__info">
       <div class="player-seat__name">{{ player.nickname }}</div>

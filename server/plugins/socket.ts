@@ -263,6 +263,31 @@ function setupSocketEvents(io: Server) {
       } catch (e: any) { callback({ error: e.message }) }
     })
 
+    socket.on('set-avatar', (data: any, callback: any) => {
+      try {
+        const { roomId, playerId } = socket.data
+        if (!roomId || !playerId) { callback({ error: 'No estas en una sala' }); return }
+        const avatarType = data.avatarType
+        if (!['classic', 'female', 'frog'].includes(avatarType)) { callback({ error: 'Avatar invalido' }); return }
+
+        const game = getGame(roomId)
+        if (game) {
+          const p = game.players.find(p => p.id === playerId)
+          if (p) p.avatarType = avatarType
+          io!.to(roomId).emit('game-update', game)
+        }
+
+        const room = getRoom(roomId)
+        if (room) {
+          const rp = room.players.find(p => p.id === playerId)
+          if (rp) rp.avatarType = avatarType
+          io!.to(roomId).emit('room-update', room)
+        }
+
+        callback({ success: true })
+      } catch (e: any) { callback({ error: e.message }) }
+    })
+
     socket.on('player-action', (data: any, callback: any) => {
       try {
         const { roomId, playerId } = socket.data

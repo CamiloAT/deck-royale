@@ -41,6 +41,7 @@ export interface Player {
   isDealer: boolean
   isTurn: boolean
   isConnected: boolean
+  avatarType: 'classic' | 'female' | 'frog'
 }
 
 export interface Pot {

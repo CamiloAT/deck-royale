@@ -212,6 +212,7 @@ export function joinRoom(roomId: string, nickname: string, chips: number): { roo
     isDealer: false,
     isTurn: false,
     isConnected: true,
+    avatarType: 'classic',
   }
 
   room.players.push(player)
