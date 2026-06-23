@@ -86,67 +86,74 @@ To deploy on Railway, Vercel (with Node.js adapter), or any VPS, run `node .outp
 
 ```text
 deck-royale/
-|-- nuxt.config.ts            ← Nuxt configuration (SSR off, favicon)
-|-- package.json              ← Dependencies and scripts
-|
-|-- app/
-|   |-- app.vue               ← Root component
-|   |
-|   |-- assets/css/
-|   |   |-- main.css          ← Global styles and CSS variables
-|   |
-|   |-- components/
-|   |   |-- game/
-|   |   |   |-- PokerTable.vue      ← Main table layout and orchestration
-|   |   |   |-- PlayerSeat.vue      ← Player seat with avatar and chips
-|   |   |   |-- PlayerAvatar.vue    ← Animated SVG avatar (3 types)
-|   |   |   |-- AvatarPicker.vue    ← Avatar selection modal
-|   |   |   |-- BetControls.vue     ← Chip selector and bet controls
-|   |   |   |-- Card.vue            ← Poker card visual (52 types)
-|   |   |   |-- CommunityCards.vue  ← Community cards with animation
-|   |   |   |-- HandCards.vue       ← Player's hidden hand
-|   |   |   |-- PokerChip.vue       ← Casino chip visual (6 denominations)
-|   |   |   |-- TimerBar.vue        ← Turn countdown bar
-|   |   |   |-- PotDisplay.vue      ← Accumulated pot display
-|   |   |   |-- EndModal.vue        ← End-game statistics
-|   |   |   |-- HelpModal.vue       ← Poker hand rankings
-|   |   |   |-- Entry.vue           ← Game entry animation
-|   |   |   |-- RoundTransition.vue ← Inter-hand animation
-|   |   |   |-- Victory.vue         ← Victory animation
-|   |   |
-|   |   |-- lobby/
-|   |   |   |-- JoinModal.vue       ← Create/join room
-|   |   |   |-- WaitingRoom.vue     ← Waiting room with settings
-|   |   |
-|   |   |-- shared/
-|   |       |-- NumberInput.vue     ← Numeric input with +/- and snapping
-|   |
-|   |-- composables/
-|   |   |-- useGame.ts         ← Reactive state, localStorage, auto-rejoin
-|   |   |-- useSocket.ts       ← Socket.IO client singleton
-|   |
-|   |-- pages/
-|   |   |-- index.vue          ← Main lobby
-|   |   |-- game/
-|   |       |-- [roomId].vue   ← Game page (dynamic route)
-|   |
-|   |-- types/
-|       |-- poker.ts           ← TypeScript types (Player, GameState, Room, etc.)
-|
-|-- server/
-    |-- api/
-    |   |-- rooms.get.ts       ← REST API to list active rooms
-    |
-    |-- plugins/
-    |   |-- socket.ts          ← Socket.IO server: all events
-    |
-    |-- poker/
-    |   |-- deck.ts            ← Create and shuffle 52-card deck
-    |   |-- hand.ts            ← Hand evaluation and comparison
-    |   |-- rules.ts           ← Poker rules: pots, side pots, actors
-    |
-    |-- rooms/
-        |-- manager.ts         ← Room management, turns, timers, disconnect
+│
+├── nuxt.config.ts                       ← Nuxt configuration (SSR off, favicon)
+├── package.json                         ← Node.js dependencies and scripts
+├── tsconfig.json                        ← TypeScript configuration
+│
+├── public/                              ← Static assets
+│   └── images/
+│       ├── logo.png                     ← App logo and favicon source
+│       └── background.webp              ← Table background texture
+│
+├── app/                                 ← Nuxt 4 client application
+│   ├── app.vue                          ← Root component
+│   │
+│   ├── assets/css/
+│   │   └── main.css                     ← Global styles and CSS variables
+│   │
+│   ├── components/
+│   │   ├── game/                        ← Game table components
+│   │   │   ├── PokerTable.vue           ← Main table layout and orchestration
+│   │   │   ├── PlayerSeat.vue           ← Player seat with avatar and chips
+│   │   │   ├── PlayerAvatar.vue         ← Animated SVG avatar (3 types)
+│   │   │   ├── AvatarPicker.vue         ← Avatar selection modal
+│   │   │   ├── BetControls.vue          ← Chip selector and bet controls
+│   │   │   ├── Card.vue                 ← Poker card visual (52 types)
+│   │   │   ├── CommunityCards.vue       ← Community cards with animation
+│   │   │   ├── HandCards.vue            ← Player's hidden hand
+│   │   │   ├── PokerChip.vue            ← Casino chip visual (6 denominations)
+│   │   │   ├── TimerBar.vue             ← Turn countdown bar
+│   │   │   ├── PotDisplay.vue           ← Accumulated pot display
+│   │   │   ├── EndModal.vue             ← End-game statistics
+│   │   │   ├── HelpModal.vue            ← Poker hand rankings
+│   │   │   ├── Entry.vue                ← Game entry animation
+│   │   │   ├── RoundTransition.vue      ← Inter-hand animation
+│   │   │   └── Victory.vue              ← Victory animation
+│   │   │
+│   │   ├── lobby/                       ← Lobby and waiting room
+│   │   │   ├── JoinModal.vue            ← Create/join room
+│   │   │   └── WaitingRoom.vue          ← Waiting room with settings
+│   │   │
+│   │   └── shared/                      ← Reusable components
+│   │       └── NumberInput.vue          ← Numeric input with +/- and snapping
+│   │
+│   ├── composables/                     ← Vue composables
+│   │   ├── useGame.ts                   ← Reactive state, localStorage, auto-rejoin
+│   │   └── useSocket.ts                 ← Socket.IO client singleton
+│   │
+│   ├── pages/                           ← Nuxt page routes
+│   │   ├── index.vue                    ← Main lobby
+│   │   └── game/
+│   │       └── [roomId].vue             ← Game page (dynamic route)
+│   │
+│   └── types/
+│       └── poker.ts                     ← TypeScript types (Player, GameState, Room)
+│
+└── server/                              ← Nuxt server (Nitro)
+    ├── api/
+    │   └── rooms.get.ts                 ← REST API to list active rooms
+    │
+    ├── plugins/
+    │   └── socket.ts                    ← Socket.IO server: all events
+    │
+    ├── poker/                           ← Core poker engine
+    │   ├── deck.ts                      ← Create and shuffle 52-card deck
+    │   ├── hand.ts                      ← Hand evaluation and comparison
+    │   └── rules.ts                     ← Poker rules: pots, side pots, actors
+    │
+    └── rooms/
+        └── manager.ts                   ← Room management, turns, timers, disconnect
 ```
 
 ---
