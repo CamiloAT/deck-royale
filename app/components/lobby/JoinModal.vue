@@ -219,7 +219,7 @@ const particles = Array.from({ length: 18 }, (_, i) => {
         </template>
       </div>
 
-      <p class="lobby__footer-text">Texas Hold'em &middot; 2-8 jugadores</p>
+      <p class="lobby__footer-text">Texas Hold'em &middot; 2-10 jugadores</p>
     </div>
   </div>
 </template>
