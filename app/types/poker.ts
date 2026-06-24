@@ -41,7 +41,7 @@ export interface Player {
   isDealer: boolean
   isTurn: boolean
   isConnected: boolean
-  avatarType: 'classic' | 'female' | 'frog'
+  avatarType: 'classic' | 'female' | 'frog' | 'penguin'
   lastAction?: string
 }
 

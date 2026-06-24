@@ -184,6 +184,48 @@ const avatarType = computed(() => props.player.avatarType || 'classic')
         </g>
       </template>
 
+      <!-- ======================== PENGUIN AVATAR ======================== -->
+      <template v-if="avatarType === 'penguin'">
+        <g class="avatar__body-group">
+          <path class="avatar__torso avatar__torso--penguin" d="M24,44 C24,36 56,36 56,44 L58,76 C58,79 22,79 22,76 Z" />
+          <ellipse class="avatar__belly avatar__belly--penguin" cx="40" cy="58" rx="11" ry="15" />
+          <path class="avatar__belly-line" d="M30,48 Q40,50 50,48" />
+        </g>
+        <g class="avatar__head-group">
+          <circle class="avatar__head avatar__head--penguin" cx="40" cy="22" r="15" />
+          <ellipse class="avatar__face-patch avatar__face-patch--penguin" cx="40" cy="24" rx="10" ry="10" />
+          <g class="avatar__eyes">
+            <circle class="avatar__eye-white" cx="35" cy="19" r="3.5" />
+            <circle class="avatar__eye-white" cx="45" cy="19" r="3.5" />
+            <circle class="avatar__pupil avatar__pupil--penguin" cx="35" cy="19" r="1.8" />
+            <circle class="avatar__pupil avatar__pupil--penguin" cx="45" cy="19" r="1.8" />
+            <circle class="avatar__eye-highlight" cx="34" cy="18" r="0.7" />
+            <circle class="avatar__eye-highlight" cx="44" cy="18" r="0.7" />
+          </g>
+          <path class="avatar__beak avatar__beak--penguin" d="M37,26 L40,31 L43,26 Z" />
+          <circle class="avatar__cheek avatar__cheek--penguin" cx="31" cy="24" r="2.5" />
+          <circle class="avatar__cheek avatar__cheek--penguin" cx="49" cy="24" r="2.5" />
+          <!-- Headphones band -->
+          <path class="avatar__headphone-band avatar__headphone-band--penguin" d="M25,20 Q25,4 40,3 Q55,4 55,20" />
+          <!-- Headphone cups -->
+          <circle class="avatar__headphone-cup avatar__headphone-cup--penguin" cx="25" cy="22" r="5" />
+          <circle class="avatar__headphone-cup avatar__headphone-cup--penguin" cx="55" cy="22" r="5" />
+          <!-- Cup inner detail -->
+          <circle class="avatar__headphone-cup-inner avatar__headphone-cup-inner--penguin" cx="25" cy="22" r="3" />
+          <circle class="avatar__headphone-cup-inner avatar__headphone-cup-inner--penguin" cx="55" cy="22" r="3" />
+        </g>
+        <g class="avatar__left-arm">
+          <path class="avatar__arm avatar__arm--penguin" d="M24,48 C16,52 12,60 10,66" />
+          <ellipse class="avatar__hand avatar__hand--penguin" cx="10" cy="66" rx="4" ry="5" transform="rotate(-15, 10, 66)" />
+        </g>
+        <g class="avatar__right-arm">
+          <path class="avatar__arm avatar__arm--penguin" d="M56,48 C64,52 68,60 70,66" />
+          <ellipse class="avatar__hand avatar__hand--penguin" cx="70" cy="66" rx="4" ry="5" transform="rotate(15, 70, 66)" />
+        </g>
+        <ellipse class="avatar__foot avatar__foot--penguin" cx="34" cy="78" rx="5" ry="2.5" />
+        <ellipse class="avatar__foot avatar__foot--penguin" cx="46" cy="78" rx="5" ry="2.5" />
+      </template>
+
       <!-- Dealer badge (shared) -->
       <g v-if="player.isDealer" class="avatar__dealer">
         <circle cx="66" cy="10" r="7" />
@@ -304,6 +346,22 @@ const avatarType = computed(() => props.player.avatarType || 'classic')
 .avatar__frog-nostril { fill: #15803d; }
 .avatar__arm--frog { stroke: #166534; stroke-width: 8; stroke-linecap: round; fill: none; }
 .avatar__hand--frog { fill: #22c55e; }
+
+/* ===== PENGUIN COLORS ===== */
+.avatar__torso--penguin { fill: #3d3d3d; }
+.avatar__belly--penguin { fill: #e8e8e8; }
+.avatar__belly-line { stroke: #d0d0d0; stroke-width: 0.6; fill: none; }
+.avatar__head--penguin { fill: #1a1a2e; }
+.avatar__face-patch--penguin { fill: #f0f0f0; }
+.avatar__pupil--penguin { fill: #0a0a15; }
+.avatar__beak--penguin { fill: #f59e0b; }
+.avatar__cheek--penguin { fill: #f0a0b0; opacity: 0.55; }
+.avatar__arm--penguin { stroke: #3d3d3d; stroke-width: 7; stroke-linecap: round; fill: none; }
+.avatar__hand--penguin { fill: #f59e0b; }
+.avatar__foot--penguin { fill: #f59e0b; }
+.avatar__headphone-band--penguin { stroke: #f59e0b; stroke-width: 3; fill: none; stroke-linecap: round; }
+.avatar__headphone-cup--penguin { fill: #f59e0b; }
+.avatar__headphone-cup-inner--penguin { fill: #e08800; }
 
 /* ===== SHARED STYLES ===== */
 .avatar__torso { transform-origin: 40px 58px; }

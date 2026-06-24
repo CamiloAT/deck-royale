@@ -17,6 +17,7 @@ const avatars = [
   { type: 'classic' as const, name: 'Masculino' },
   { type: 'female' as const, name: 'Femenino' },
   { type: 'frog' as const, name: 'Sapo' },
+  { type: 'penguin' as const, name: 'Pengsoo' },
 ]
 
 const current = computed(() => props.player.avatarType || 'classic')

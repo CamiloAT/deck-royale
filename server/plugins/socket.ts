@@ -273,7 +273,7 @@ function setupSocketEvents(io: Server) {
         const { roomId, playerId } = socket.data
         if (!roomId || !playerId) { callback({ error: 'No estas en una sala' }); return }
         const avatarType = data.avatarType
-        if (!['classic', 'female', 'frog'].includes(avatarType)) { callback({ error: 'Avatar invalido' }); return }
+        if (!['classic', 'female', 'frog', 'penguin'].includes(avatarType)) { callback({ error: 'Avatar invalido' }); return }
 
         const game = getGame(roomId)
         if (game) {
