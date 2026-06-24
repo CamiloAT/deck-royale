@@ -292,7 +292,7 @@ export function removePlayerFromGame(roomId: string, playerId: string): { gameOv
   if (player.isTurn) {
     const nextIdx = nextActivePlayer(game.players, -1)
     if (nextIdx !== -1) {
-      game.players[nextIdx] = { ...game.players[nextIdx], isTurn: true }
+      game.players[nextIdx] = { ...game.players[nextIdx], isTurn: true, lastAction: undefined }
       game.currentPlayerIndex = nextIdx
       startTurnTimer(roomId, game.players[nextIdx].id)
     }
@@ -367,6 +367,7 @@ export function startGame(roomId: string): GameState | null {
   game.players[game.currentPlayerIndex] = {
     ...game.players[game.currentPlayerIndex],
     isTurn: true,
+    lastAction: undefined,
   }
 
   games.set(roomId, game)
@@ -404,7 +405,7 @@ export function performAction(
 
   switch (action) {
     case 'fold': {
-      updatedPlayers[playerIndex] = { ...player, folded: true, isTurn: false }
+      updatedPlayers[playerIndex] = { ...player, folded: true, isTurn: false, lastAction: 'fold' }
       message = `${player.nickname} se fue`
       break
     }
@@ -413,7 +414,7 @@ export function performAction(
       if (player.bet < game.currentBet) {
         return { error: 'No puedes pasar, debes igualar o subir' }
       }
-      updatedPlayers[playerIndex] = { ...player, isTurn: false }
+      updatedPlayers[playerIndex] = { ...player, isTurn: false, lastAction: 'check' }
       message = `${player.nickname} pasa`
       break
     }
@@ -433,6 +434,7 @@ export function performAction(
         chips: newChips,
         isTurn: false,
         allIn: newChips === 0,
+        lastAction: 'call',
       }
       message = `${player.nickname} iguala ${callAmount}`
       break
@@ -457,6 +459,7 @@ export function performAction(
         chips: newChips,
         isTurn: false,
         allIn: newChips === 0,
+        lastAction: 'raise',
       }
       game.currentBet = newBet
       game.lastAggressorIndex = playerIndex
@@ -475,6 +478,7 @@ export function performAction(
         chips: 0,
         isTurn: false,
         allIn: true,
+        lastAction: 'all_in',
       }
       if (newBet > game.currentBet) {
         game.currentBet = newBet
@@ -656,7 +660,7 @@ export function performAction(
 
   const nextIdx = nextPlayerIdx
   if (nextIdx !== -1) {
-    updatedPlayers[nextIdx] = { ...updatedPlayers[nextIdx], isTurn: true }
+    updatedPlayers[nextIdx] = { ...updatedPlayers[nextIdx], isTurn: true, lastAction: undefined }
   }
 
   game.currentPlayerIndex = nextIdx !== -1 ? nextIdx : playerIndex
@@ -922,6 +926,7 @@ export function nextHand(roomId: string): GameState | null {
   newGame.players[newGame.currentPlayerIndex] = {
     ...newGame.players[newGame.currentPlayerIndex],
     isTurn: true,
+    lastAction: undefined,
   }
 
   games.set(roomId, newGame)

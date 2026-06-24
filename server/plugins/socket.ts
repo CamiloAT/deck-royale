@@ -31,16 +31,21 @@ export function defineSocketPlugin() {
 function handleShowdownAndNext(ioRef: Server, roomId: string, game: GameState) {
   if (game.phase === 'showdown') {
     if (hasGameEnded(roomId)) {
-      const gameOverData = getGameOverData(roomId)
-      ioRef.to(roomId).emit('game-over', gameOverData)
+      setTimeout(() => {
+        const gameOverData = getGameOverData(roomId)
+        ioRef.to(roomId).emit('game-over', gameOverData)
+      }, 6000)
     } else {
+      setTimeout(() => {
+        ioRef.to(roomId).emit('hand-started', { handNumber: game.handNumber })
+      }, 5500)
+
       setTimeout(() => {
         const newGame = nextHand(roomId)
         if (newGame) {
           ioRef.to(roomId).emit('game-update', newGame)
-          ioRef.to(roomId).emit('hand-started', { handNumber: newGame.handNumber })
         }
-      }, 3000)
+      }, 6000)
     }
   }
 }

@@ -82,9 +82,9 @@ export function calculatePots(players: Player[]): Pot[] {
   return pots
 }
 
-export function distributePots(players: Player[], pots: Pot[], communityCards: Card[]): { updatedPlayers: Player[]; potWinners: { potIndex: number; potAmount: number; winnerId: string; winnerNickname: string; amountWon: number }[] } {
+export function distributePots(players: Player[], pots: Pot[], communityCards: Card[]): { updatedPlayers: Player[]; potWinners: { potIndex: number; potAmount: number; winnerId: string; winnerNickname: string; amountWon: number; handName?: string }[] } {
   const updatedPlayers = [...players]
-  const potWinners: { potIndex: number; potAmount: number; winnerId: string; winnerNickname: string; amountWon: number }[] = []
+  const potWinners: { potIndex: number; potAmount: number; winnerId: string; winnerNickname: string; amountWon: number; handName?: string }[] = []
 
   for (let i = 0; i < pots.length; i++) {
     const pot = pots[i]
@@ -120,6 +120,7 @@ export function distributePots(players: Player[], pots: Pot[], communityCards: C
         winnerId: winner.player.id,
         winnerNickname: winner.player.nickname,
         amountWon: share,
+        handName: winner.result.name,
       })
     }
   }

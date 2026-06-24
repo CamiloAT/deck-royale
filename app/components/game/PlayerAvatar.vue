@@ -7,33 +7,26 @@ const props = defineProps<{
 }>()
 
 const anim = ref('')
+let animTimeout: ReturnType<typeof setTimeout> | null = null
 
-const prev = {
-  folded: props.player.folded,
-  allIn: props.player.allIn,
-  isTurn: props.player.isTurn,
-  bet: props.player.bet,
+function setAnim(name: string, duration: number) {
+  if (animTimeout) clearTimeout(animTimeout)
+  anim.value = name
+  animTimeout = setTimeout(() => { anim.value = '' }, duration)
 }
 
-watch(() => props.player, (p) => {
-  if (p.folded && !prev.folded) {
-    anim.value = 'fold'
-  } else if (p.allIn && !prev.allIn) {
-    anim.value = 'allin'
-  } else if (prev.isTurn && !p.isTurn) {
-    anim.value = p.bet > prev.bet ? 'raise' : 'check'
+watch(() => props.player.lastAction, (action) => {
+  if (!action) return
+  if (action === 'fold') {
+    setAnim('fold', 1200)
+  } else if (action === 'all_in') {
+    setAnim('allin', 1500)
+  } else if (action === 'call' || action === 'raise') {
+    setAnim('raise', 1400)
+  } else if (action === 'check') {
+    setAnim('check', 800)
   }
-
-  prev.folded = p.folded
-  prev.allIn = p.allIn
-  prev.isTurn = p.isTurn
-  prev.bet = p.bet
-
-  if (anim.value) {
-    const duration = anim.value === 'raise' ? 1400 : anim.value === 'allin' ? 1500 : anim.value === 'fold' ? 1200 : 800
-    setTimeout(() => { anim.value = '' }, duration)
-  }
-}, { deep: true })
+})
 
 const avatarType = computed(() => props.player.avatarType || 'classic')
 </script>

@@ -42,6 +42,7 @@ export interface Player {
   isTurn: boolean
   isConnected: boolean
   avatarType: 'classic' | 'female' | 'frog'
+  lastAction?: string
 }
 
 export interface Pot {
@@ -101,6 +102,7 @@ export interface PotWinner {
   winnerId: string
   winnerNickname: string
   amountWon: number
+  handName?: string
 }
 
 export interface HandResult {

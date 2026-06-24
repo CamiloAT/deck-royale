@@ -62,23 +62,24 @@ const latestHandResult = computed(() => {
   return history[history.length - 1]
 })
 
-const showVictory = ref(false)
+const showReveal = ref(false)
 const showLeaveModal = ref(false)
 const showHelpModal = ref(false)
 
 watch(() => props.gameState.phase, (phase) => {
   if (phase === 'showdown' && latestHandResult.value) {
-    showVictory.value = true
+    showReveal.value = true
   }
 }, { immediate: true })
 </script>
 
 <template>
-  <GameVictory
-    v-if="showVictory && latestHandResult"
-    :winner-nickname="latestHandResult.winners[0]?.winnerNickname ?? ''"
-    :amount-won="latestHandResult.winners.filter(w => w.winnerId === latestHandResult.winners[0]?.winnerId).reduce((sum, w) => sum + w.amountWon, 0)"
-    @done="showVictory = false"
+  <GameShowdownReveal
+    v-if="showReveal && latestHandResult"
+    :players="gameState.players"
+    :winners="latestHandResult.winners"
+    :community-cards="latestHandResult.communityCards"
+    @done="showReveal = false"
   />
   <div class="poker-table">
     <!-- Help button -->
