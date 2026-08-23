@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 
+const props = defineProps<{
+  preview?: boolean
+}>()
+
 const emit = defineEmits<{
   (e: 'done'): void
 }>()
@@ -13,19 +17,21 @@ onMounted(() => {
     phase.value = 'countdown'
   }, 800)
 
-  const timer = setInterval(() => {
-    countdown.value--
-    if (countdown.value <= 0) {
-      clearInterval(timer)
-      phase.value = 'fadeout'
-      setTimeout(() => emit('done'), 800)
-    }
-  }, 1000)
+  if (!props.preview) {
+    const timer = setInterval(() => {
+      countdown.value--
+      if (countdown.value <= 0) {
+        clearInterval(timer)
+        phase.value = 'fadeout'
+        setTimeout(() => emit('done'), 800)
+      }
+    }, 1000)
+  }
 })
 </script>
 
 <template>
-  <div class="entry-overlay" :class="`entry-overlay--${phase}`">
+  <div class="entry-overlay" :class="`entry-overlay--${phase}`" @click="preview ? emit('done') : null">
     <!-- Background particles -->
     <div class="entry-particles">
       <div v-for="i in 24" :key="i" class="entry-particle" :style="{
@@ -35,16 +41,16 @@ onMounted(() => {
       }"></div>
     </div>
 
-    <!-- Flying cards around center -->
+    <!-- Flying cards around center (card backs) -->
     <div class="entry-cards">
-      <div class="entry-card entry-card--1"><div class="entry-card__face"><span class="entry-suit entry-suit--red">A♥</span></div></div>
-      <div class="entry-card entry-card--2"><div class="entry-card__face"><span class="entry-suit entry-suit--black">K♠</span></div></div>
-      <div class="entry-card entry-card--3"><div class="entry-card__face"><span class="entry-suit entry-suit--red">Q♦</span></div></div>
-      <div class="entry-card entry-card--4"><div class="entry-card__face"><span class="entry-suit entry-suit--black">J♣</span></div></div>
-      <div class="entry-card entry-card--5"><div class="entry-card__face"><span class="entry-suit entry-suit--red">10♥</span></div></div>
-      <div class="entry-card entry-card--6"><div class="entry-card__face"><span class="entry-suit entry-suit--black">A♠</span></div></div>
-      <div class="entry-card entry-card--7"><div class="entry-card__face"><span class="entry-suit entry-suit--red">10♦</span></div></div>
-      <div class="entry-card entry-card--8"><div class="entry-card__face"><span class="entry-suit entry-suit--black">A♣</span></div></div>
+      <div class="entry-card entry-card--1"><div class="entry-card__back"><div class="entry-card__pattern" /></div></div>
+      <div class="entry-card entry-card--2"><div class="entry-card__back"><div class="entry-card__pattern" /></div></div>
+      <div class="entry-card entry-card--3"><div class="entry-card__back"><div class="entry-card__pattern" /></div></div>
+      <div class="entry-card entry-card--4"><div class="entry-card__back"><div class="entry-card__pattern" /></div></div>
+      <div class="entry-card entry-card--5"><div class="entry-card__back"><div class="entry-card__pattern" /></div></div>
+      <div class="entry-card entry-card--6"><div class="entry-card__back"><div class="entry-card__pattern" /></div></div>
+      <div class="entry-card entry-card--7"><div class="entry-card__back"><div class="entry-card__pattern" /></div></div>
+      <div class="entry-card entry-card--8"><div class="entry-card__back"><div class="entry-card__pattern" /></div></div>
     </div>
 
     <!-- Center content -->
@@ -74,10 +80,10 @@ onMounted(() => {
 
     <!-- Fan at bottom -->
     <div class="entry-fan">
-      <div v-for="i in 7" :key="i" class="entry-fan__card" :style="{
-        transform: `rotate(${(i - 4) * 10}deg)`,
+      <div v-for="(suit, i) in ['♠', '♥', '♣', '♦', '♠', '♥', '♣']" :key="i" class="entry-fan__card" :style="{
+        transform: `rotate(${(i - 3) * 10}deg)`,
       }">
-        <span class="entry-fan__suit" :class="i % 2 === 0 ? 'entry-suit--red' : 'entry-suit--black'">♠♥♣♦♠♥♣</span>
+        <span class="entry-fan__suit" :class="suit === '♥' || suit === '♦' ? 'entry-suit--red' : 'entry-suit--black'">{{ suit }}</span>
       </div>
     </div>
   </div>
@@ -143,12 +149,39 @@ onMounted(() => {
   top: -42px;
 }
 
-.entry-card__face {
+.entry-card__back {
   width: 100%;
   height: 100%;
+  border-radius: 6px;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: linear-gradient(145deg, #1c2940 0%, #111827 100%);
+  border: 2px solid rgba(255, 215, 0, 0.25);
+  box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.5);
+}
+
+.entry-card__pattern {
+  width: calc(100% - 8px);
+  height: calc(100% - 8px);
+  border-radius: 4px;
+  border: 1px solid rgba(255, 215, 0, 0.15);
+  background:
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 4px,
+      rgba(255, 215, 0, 0.04) 4px,
+      rgba(255, 215, 0, 0.04) 5px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 4px,
+      rgba(255, 215, 0, 0.04) 4px,
+      rgba(255, 215, 0, 0.04) 5px
+    );
 }
 
 .entry-suit { font-size: 20px; font-weight: 900; font-family: 'Georgia', serif; }
@@ -264,9 +297,8 @@ onMounted(() => {
 }
 
 .entry-fan__suit {
-  font-size: 12px;
-  letter-spacing: -1px;
-  opacity: 0.4;
+  font-size: 18px;
+  opacity: 0.5;
 }
 
 /* === TRANSITIONS === */
@@ -380,7 +412,7 @@ onMounted(() => {
   .entry-countdown__go { font-size: 46px; }
   .entry-waiting { font-size: 11px; letter-spacing: 2px; }
   .entry-fan__card { width: 28px; height: 40px; margin: 0 -6px; }
-  .entry-fan__suit { font-size: 9px; }
+  .entry-fan__suit { font-size: 14px; }
   @keyframes cardOrbit1 {
     0% { opacity: 0; transform: translate(0, 0) rotate(0deg) scale(0.3); }
     20% { opacity: 1; transform: translate(-40px, -70px) rotate(-20deg) scale(1); }
