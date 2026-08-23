@@ -158,7 +158,10 @@ function setupSocketEvents(io: Server) {
         if (room.started) { callback({ error: 'La partida ya comenzó' }); return }
         if (data.smallBlind !== undefined) room.smallBlind = Math.max(50, Number(data.smallBlind) || 100)
         if (data.bigBlind !== undefined) room.bigBlind = Math.max(100, Number(data.bigBlind) || 200)
-        if (data.minBuyIn !== undefined) room.minBuyIn = Math.max(500, Number(data.minBuyIn) || 2000)
+        if (data.minBuyIn !== undefined) {
+          room.minBuyIn = Math.max(500, Number(data.minBuyIn) || 2000)
+          room.players.forEach(p => { p.chips = room.minBuyIn })
+        }
         callback({ success: true })
         io!.to(roomId).emit('room-update', room)
       } catch (e: any) { callback({ error: e.message }) }
