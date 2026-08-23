@@ -265,7 +265,7 @@ export function removePlayerFromGame(roomId: string, playerId: string): { gameOv
   if (!player) return null
 
   if (!departedPlayers.has(roomId)) departedPlayers.set(roomId, [])
-  departedPlayers.get(roomId)!.push({ id: player.id, nickname: player.nickname, chips: 0 })
+  departedPlayers.get(roomId)!.push({ id: player.id, nickname: player.nickname, chips: player.chips })
 
   if (player.isTurn) {
     cancelTurnTimer(roomId)
@@ -839,6 +839,8 @@ export function endGameByHost(roomId: string, playerId: string): { error: string
   cancelTurnTimer(roomId)
   pausedTurnRemaining.delete(roomId)
 
+  game.canEndHand = false
+
   for (let i = 0; i < game.players.length; i++) {
     const p = game.players[i]
     if (p.bet > 0) {
@@ -846,16 +848,6 @@ export function endGameByHost(roomId: string, playerId: string): { error: string
     }
   }
   game.pots = []
-
-  const handResult: HandResult = {
-    handNumber: game.handNumber,
-    winners: [],
-    foldedPlayers: [],
-    communityCards: [...game.communityCards],
-    finalChips: Object.fromEntries(game.players.map(p => [p.id, p.chips])),
-    playerBets: Object.fromEntries(game.players.map(p => [p.id, p.totalBet])),
-  }
-  game.handHistory = [...game.handHistory, handResult]
 
   return null
 }
