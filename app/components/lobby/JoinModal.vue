@@ -128,7 +128,7 @@ const particles = Array.from({ length: 18 }, (_, i) => {
           <Spade :size="12" class="lobby__divider-icon" />
           <span class="lobby__divider-line"></span>
         </div>
-        <p class="lobby__subtitle">JUEGOS CON CARTAS ONLINE</p>
+        <p class="lobby__subtitle">POKER TEXAS ONLINE</p>
       </div>
 
       <div class="lobby__form">
@@ -345,9 +345,10 @@ const particles = Array.from({ length: 18 }, (_, i) => {
 .lobby__input-icon {
   position: absolute;
   right: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 16px;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
   pointer-events: none;
   opacity: 0.6;
 }
