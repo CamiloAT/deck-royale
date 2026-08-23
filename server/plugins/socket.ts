@@ -132,7 +132,9 @@ function setupSocketEvents(io: Server) {
 
     socket.on('join-room', (data: any, callback: any) => {
       try {
-        const result = joinRoom(data.roomId, data.nickname, data.buyIn || 2000)
+        const room = getRoom(data.roomId)
+        if (!room) { callback({ error: 'Sala no encontrada' }); return }
+        const result = joinRoom(data.roomId, data.nickname, room.minBuyIn)
         if ('error' in result) { callback({ error: result.error }); return }
         socket.join(data.roomId)
         socket.data.roomId = data.roomId
