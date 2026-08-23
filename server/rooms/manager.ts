@@ -17,11 +17,13 @@ const rooms = new Map<string, Room>()
 const games = new Map<string, GameState>()
 const turnTimers = new Map<string, ReturnType<typeof setTimeout>>()
 const disconnectTimers = new Map<string, ReturnType<typeof setTimeout>>()
+const lobbyCleanupTimers = new Map<string, ReturnType<typeof setTimeout>>()
 const pausedTurnRemaining = new Map<string, number>()
 const departedPlayers = new Map<string, { id: string; nickname: string; chips: number }[]>()
 
 export const TURN_DURATION = 60
 export const DISCONNECT_GRACE = 15
+export const LOBBY_CLEANUP_DELAY = 10 * 60 * 1000
 
 let onAutoFold: ((roomId: string, game: GameState, message: string) => void) | null = null
 let onPlayerKicked: ((roomId: string, playerId: string) => void) | null = null
@@ -129,6 +131,29 @@ export function cancelDisconnectTimer(roomId: string) {
   }
 }
 
+export function startLobbyCleanup(roomId: string) {
+  if (lobbyCleanupTimers.has(roomId)) return
+
+  const timer = setTimeout(() => {
+    lobbyCleanupTimers.delete(roomId)
+    const room = rooms.get(roomId)
+    if (!room || room.started) return
+    if (room.players.some(p => p.isConnected)) return
+    deleteRoom(roomId)
+    console.log(`[Manager] Sala ${roomId} eliminada por inactividad en lobby`)
+  }, LOBBY_CLEANUP_DELAY)
+
+  lobbyCleanupTimers.set(roomId, timer)
+}
+
+export function cancelLobbyCleanup(roomId: string) {
+  const timer = lobbyCleanupTimers.get(roomId)
+  if (timer) {
+    clearTimeout(timer)
+    lobbyCleanupTimers.delete(roomId)
+  }
+}
+
 function kickPlayer(roomId: string, playerId: string) {
   const game = games.get(roomId)
   const room = rooms.get(roomId)
@@ -180,6 +205,7 @@ export function deleteRoom(id: string): void {
   games.delete(id)
   cancelTurnTimer(id)
   cancelDisconnectTimer(id)
+  cancelLobbyCleanup(id)
   pausedTurnRemaining.delete(id)
 }
 
@@ -216,6 +242,7 @@ export function joinRoom(roomId: string, nickname: string, chips: number): { roo
   }
 
   room.players.push(player)
+  cancelLobbyCleanup(roomId)
   return { room, player }
 }
 

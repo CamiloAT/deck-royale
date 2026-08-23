@@ -4,6 +4,7 @@ import {
   hasGameEnded, getGameOverData, nextHand, advanceAllInRunout, resolveAllInShowdown,
   cancelTurnTimer, pauseTurnTimer, resumeTurnTimer,
   startDisconnectTimer, cancelDisconnectTimer,
+  startLobbyCleanup, cancelLobbyCleanup,
   setOnAutoFold, setOnPlayerKicked, endGameByHost,
 } from '../rooms/manager'
 import type { GameState } from '../../types/poker'
@@ -136,6 +137,7 @@ function setupSocketEvents(io: Server) {
         socket.join(data.roomId)
         socket.data.roomId = data.roomId
         socket.data.playerId = result.player.id
+        cancelLobbyCleanup(data.roomId)
         callback({ room: result.room, player: result.player })
         io!.to(data.roomId).emit('room-update', result.room)
       } catch (e: any) { callback({ error: e.message }) }
@@ -239,6 +241,8 @@ function setupSocketEvents(io: Server) {
         socket.join(roomId)
         socket.data.roomId = roomId
         socket.data.playerId = existingPlayer.id
+
+        cancelLobbyCleanup(roomId)
 
         callback({ room, player: existingPlayer })
         io!.to(roomId).emit('room-update', room)
@@ -344,7 +348,12 @@ function setupSocketEvents(io: Server) {
         }
 
         io!.to(roomId).emit('player-disconnected', { playerId, nickname: '' })
-        startDisconnectTimer(roomId, playerId)
+
+        if (game) {
+          startDisconnectTimer(roomId, playerId)
+        } else if (room && !room.started && room.players.every(p => !p.isConnected)) {
+          startLobbyCleanup(roomId)
+        }
       }
       console.log(`[Socket] Jugador desconectado: ${socket.id}`)
     })
