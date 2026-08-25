@@ -56,8 +56,19 @@ watch(() => props.faceDown, () => {
       </div>
     </div>
     <div class="card__face card__back">
-      <div class="card__back-pattern">
-        <span class="card__back-text">DR</span>
+      <div class="card__back-border">
+        <div class="card__back-inner">
+          <div class="card__back-dots" />
+          <div class="card__back-corner card__back-corner--tl" />
+          <div class="card__back-corner card__back-corner--tr" />
+          <div class="card__back-corner card__back-corner--bl" />
+          <div class="card__back-corner card__back-corner--br" />
+          <div class="card__back-chip">
+            <div class="card__back-chip-ring">
+              <span class="card__back-spade">♠</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -103,13 +114,14 @@ watch(() => props.faceDown, () => {
 }
 
 .card__back {
-  background: linear-gradient(135deg, #1a1a5e 0%, #2d2d8a 50%, #1a1a5e 100%);
-  border-color: #4a4a8a;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  background: linear-gradient(160deg, #12162d 0%, #0e1124 40%, #161b38 100%);
+  border-color: #b8962e;
+  border-width: 2px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4), inset 0 0 8px rgba(184, 150, 46, 0.05);
   transform: rotateY(180deg);
   z-index: 1;
-  align-items: center;
-  justify-content: center;
+  padding: 0;
+  overflow: hidden;
 }
 
 .card--face-down .card__front {
@@ -127,30 +139,110 @@ watch(() => props.faceDown, () => {
   padding: 2px 3px;
 }
 
-.card__back-pattern {
-  width: 80%;
-  height: 80%;
-  border: 1.5px solid rgba(255, 215, 0, 0.25);
+.card__back-border {
+  width: 100%;
+  height: 100%;
+  border: 1.5px solid #b8962e;
   border-radius: 3px;
+  margin: 2px;
+  width: calc(100% - 4px);
+  height: calc(100% - 4px);
+}
+
+.card__back-inner {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: repeating-linear-gradient(
-    45deg,
-    transparent,
-    transparent 3px,
-    rgba(255, 215, 0, 0.04) 3px,
-    rgba(255, 215, 0, 0.04) 6px
+}
+
+.card__back-dots {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle, rgba(184, 150, 46, 0.25) 1px, transparent 1px);
+  background-size: 8px 8px;
+  background-position: 0 0;
+}
+
+.card__back-corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid rgba(184, 150, 46, 0.4);
+}
+.card__back-corner--tl { top: 4px; left: 4px; border-right: none; border-bottom: none; border-radius: 4px 0 0 0; }
+.card__back-corner--tr { top: 4px; right: 4px; border-left: none; border-bottom: none; border-radius: 0 4px 0 0; }
+.card__back-corner--bl { bottom: 4px; left: 4px; border-right: none; border-top: none; border-radius: 0 0 0 4px; }
+.card__back-corner--br { bottom: 4px; right: 4px; border-left: none; border-top: none; border-radius: 0 0 4px 0; }
+
+.card__back-chip {
+  position: relative;
+  z-index: 2;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    #b8962e 0deg 22.5deg, #0e1124 22.5deg 45deg,
+    #b8962e 45deg 67.5deg, #0e1124 67.5deg 90deg,
+    #b8962e 90deg 112.5deg, #0e1124 112.5deg 135deg,
+    #b8962e 135deg 157.5deg, #0e1124 157.5deg 180deg,
+    #b8962e 180deg 202.5deg, #0e1124 202.5deg 225deg,
+    #b8962e 225deg 247.5deg, #0e1124 247.5deg 270deg,
+    #b8962e 270deg 292.5deg, #0e1124 292.5deg 315deg,
+    #b8962e 315deg 337.5deg, #0e1124 337.5deg 360deg
   );
+  border: 1.5px solid #b8962e;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.card__back-text {
-  color: rgba(255, 215, 0, 0.5);
-  font-size: 11px;
-  font-weight: bold;
-  letter-spacing: 2px;
+
+.card__back-chip-ring {
+  width: 72%;
+  height: 72%;
+  border-radius: 50%;
+  border: 1.5px solid #b8962e;
+  background: radial-gradient(circle at 40% 40%, #161b38, #0e1124);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.6);
 }
-.card--small .card__back-text {
-  font-size: 8px;
+
+.card__back-spade {
+  color: #b8962e;
+  font-size: 10px;
+  line-height: 1;
+}
+
+.card--small .card__back-border {
+  margin: 1px;
+  width: calc(100% - 2px);
+  height: calc(100% - 2px);
+}
+.card--small .card__back-dots {
+  background-size: 6px 6px;
+}
+.card--small .card__back-corner {
+  width: 10px;
+  height: 10px;
+}
+.card--small .card__back-corner--tl { top: 2px; left: 2px; }
+.card--small .card__back-corner--tr { top: 2px; right: 2px; }
+.card--small .card__back-corner--bl { bottom: 2px; left: 2px; }
+.card--small .card__back-corner--br { bottom: 2px; right: 2px; }
+.card--small .card__back-chip {
+  width: 18px;
+  height: 18px;
+}
+.card--small .card__back-spade {
+  font-size: 7px;
 }
 
 .card--dimmed {

@@ -93,7 +93,14 @@ onMounted(() => {
         >
           <div class="reveal-community-card__inner">
             <div class="reveal-community-card__front">
-              <div class="reveal-community-card__back-text">DR</div>
+              <div class="reveal-card-back-deco">
+                <div class="reveal-card-back-deco__border">
+                  <div class="reveal-card-back-deco__inner">
+                    <div class="reveal-card-back-deco__dots" />
+                    <div class="reveal-card-back-deco__chip"><span>♠</span></div>
+                  </div>
+                </div>
+              </div>
             </div>
             <div class="reveal-community-card__back">
               <GameCard :card="card" />
@@ -129,7 +136,14 @@ onMounted(() => {
           >
             <div class="reveal-card-inner">
               <div class="reveal-card-front">
-                <div class="reveal-card-back-design">DR</div>
+                <div class="reveal-card-back-deco">
+                  <div class="reveal-card-back-deco__border">
+                    <div class="reveal-card-back-deco__inner">
+                      <div class="reveal-card-back-deco__dots" />
+                      <div class="reveal-card-back-deco__chip"><span>♠</span></div>
+                    </div>
+                  </div>
+                </div>
               </div>
               <div class="reveal-card-back">
                 <GameCard :card="card" />
@@ -260,20 +274,8 @@ onMounted(() => {
   overflow: hidden;
 }
 .reveal-community-card__front {
-  background: linear-gradient(135deg, #1a1a5e 0%, #2d2d8a 50%, #1a1a5e 100%);
-  border: 1.5px solid #4a4a8a;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.reveal-community-card__back-text {
-  color: rgba(255, 215, 0, 0.5);
-  font-size: 11px;
-  font-weight: bold;
-  letter-spacing: 2px;
-  border: 1px solid rgba(255, 215, 0, 0.2);
-  padding: 4px 8px;
-  border-radius: 3px;
+  background: linear-gradient(160deg, #12162d 0%, #0e1124 40%, #161b38 100%);
+  border: 2px solid #b8962e;
 }
 .reveal-community-card__back {
   transform: rotateY(180deg);
@@ -361,23 +363,84 @@ onMounted(() => {
 }
 
 .reveal-card-front {
-  background: linear-gradient(135deg, #1a1a5e 0%, #2d2d8a 50%, #1a1a5e 100%);
-  border: 1.5px solid #4a4a8a;
+  background: linear-gradient(160deg, #12162d 0%, #0e1124 40%, #161b38 100%);
+  border: 2px solid #b8962e;
+}
+.reveal-card-back {
+  transform: rotateY(180deg);
+}
+
+/* Shared card back decoration */
+.reveal-card-back-deco {
+  width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.reveal-card-back-design {
-  color: rgba(255, 215, 0, 0.5);
-  font-size: 12px;
-  font-weight: bold;
-  letter-spacing: 2px;
-  border: 1px solid rgba(255, 215, 0, 0.2);
-  padding: 4px 8px;
+.reveal-card-back-deco__border {
+  width: calc(100% - 6px);
+  height: calc(100% - 6px);
+  border: 1.5px solid #b8962e;
   border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.reveal-card-back {
-  transform: rotateY(180deg);
+.reveal-card-back-deco__inner {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.reveal-card-back-deco__dots {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(184, 150, 46, 0.25) 1px, transparent 1px);
+  background-size: 8px 8px;
+}
+.reveal-card-back-deco__chip {
+  position: relative;
+  z-index: 1;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    #b8962e 0deg 22.5deg, #0e1124 22.5deg 45deg,
+    #b8962e 45deg 67.5deg, #0e1124 67.5deg 90deg,
+    #b8962e 90deg 112.5deg, #0e1124 112.5deg 135deg,
+    #b8962e 135deg 157.5deg, #0e1124 157.5deg 180deg,
+    #b8962e 180deg 202.5deg, #0e1124 202.5deg 225deg,
+    #b8962e 225deg 247.5deg, #0e1124 247.5deg 270deg,
+    #b8962e 270deg 292.5deg, #0e1124 292.5deg 315deg,
+    #b8962e 315deg 337.5deg, #0e1124 337.5deg 360deg
+  );
+  border: 1.5px solid #b8962e;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.reveal-card-back-deco__chip::after {
+  content: '';
+  width: 72%;
+  height: 72%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 40%, #161b38, #0e1124);
+  border: 1.5px solid #b8962e;
+  position: absolute;
+  box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.6);
+}
+.reveal-card-back-deco__chip span {
+  position: relative;
+  z-index: 1;
+  color: #b8962e;
+  font-size: 10px;
+  line-height: 1;
 }
 
 .reveal-player__winner-badge {
@@ -456,9 +519,7 @@ onMounted(() => {
   .reveal-players { gap: 16px; }
   .reveal-player { padding: 10px 12px; min-width: 80px; }
   .reveal-card-wrapper { width: 42px; height: 58px; }
-  .reveal-card-back-design { font-size: 9px; }
   .reveal-community-card { width: 42px; height: 58px; }
-  .reveal-community-card__back-text { font-size: 9px; padding: 3px 6px; }
   .reveal-community__cards { gap: 5px; }
 }
 </style>

@@ -43,14 +43,14 @@ onMounted(() => {
 
     <!-- Flying cards around center (card backs) -->
     <div class="entry-cards">
-      <div class="entry-card entry-card--1"><div class="entry-card__back"><div class="entry-card__pattern" /></div></div>
-      <div class="entry-card entry-card--2"><div class="entry-card__back"><div class="entry-card__pattern" /></div></div>
-      <div class="entry-card entry-card--3"><div class="entry-card__back"><div class="entry-card__pattern" /></div></div>
-      <div class="entry-card entry-card--4"><div class="entry-card__back"><div class="entry-card__pattern" /></div></div>
-      <div class="entry-card entry-card--5"><div class="entry-card__back"><div class="entry-card__pattern" /></div></div>
-      <div class="entry-card entry-card--6"><div class="entry-card__back"><div class="entry-card__pattern" /></div></div>
-      <div class="entry-card entry-card--7"><div class="entry-card__back"><div class="entry-card__pattern" /></div></div>
-      <div class="entry-card entry-card--8"><div class="entry-card__back"><div class="entry-card__pattern" /></div></div>
+      <div class="entry-card entry-card--1"><div class="entry-card__back"><div class="entry-card__pattern"><div class="entry-card__dots" /><div class="entry-card__chip"><div class="entry-card__chip-inner" /><span class="entry-card__spade">♠</span></div></div></div></div>
+      <div class="entry-card entry-card--2"><div class="entry-card__back"><div class="entry-card__pattern"><div class="entry-card__dots" /><div class="entry-card__chip"><div class="entry-card__chip-inner" /><span class="entry-card__spade">♠</span></div></div></div></div>
+      <div class="entry-card entry-card--3"><div class="entry-card__back"><div class="entry-card__pattern"><div class="entry-card__dots" /><div class="entry-card__chip"><div class="entry-card__chip-inner" /><span class="entry-card__spade">♠</span></div></div></div></div>
+      <div class="entry-card entry-card--4"><div class="entry-card__back"><div class="entry-card__pattern"><div class="entry-card__dots" /><div class="entry-card__chip"><div class="entry-card__chip-inner" /><span class="entry-card__spade">♠</span></div></div></div></div>
+      <div class="entry-card entry-card--5"><div class="entry-card__back"><div class="entry-card__pattern"><div class="entry-card__dots" /><div class="entry-card__chip"><div class="entry-card__chip-inner" /><span class="entry-card__spade">♠</span></div></div></div></div>
+      <div class="entry-card entry-card--6"><div class="entry-card__back"><div class="entry-card__pattern"><div class="entry-card__dots" /><div class="entry-card__chip"><div class="entry-card__chip-inner" /><span class="entry-card__spade">♠</span></div></div></div></div>
+      <div class="entry-card entry-card--7"><div class="entry-card__back"><div class="entry-card__pattern"><div class="entry-card__dots" /><div class="entry-card__chip"><div class="entry-card__chip-inner" /><span class="entry-card__spade">♠</span></div></div></div></div>
+      <div class="entry-card entry-card--8"><div class="entry-card__back"><div class="entry-card__pattern"><div class="entry-card__dots" /><div class="entry-card__chip"><div class="entry-card__chip-inner" /><span class="entry-card__spade">♠</span></div></div></div></div>
     </div>
 
     <!-- Center content -->
@@ -140,10 +140,8 @@ onMounted(() => {
   position: absolute;
   width: 60px;
   height: 84px;
-  background: linear-gradient(145deg, #1c2940 0%, #111827 100%);
-  border: 2px solid rgba(255, 215, 0, 0.25);
   border-radius: 8px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6), inset 0 0 12px rgba(255, 215, 0, 0.05);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
   opacity: 0;
   left: -30px;
   top: -42px;
@@ -157,31 +155,70 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(145deg, #1c2940 0%, #111827 100%);
-  border: 2px solid rgba(255, 215, 0, 0.25);
-  box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.5);
+  background: linear-gradient(160deg, #12162d 0%, #0e1124 40%, #161b38 100%);
+  border: 2px solid #b8962e;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
 }
 
 .entry-card__pattern {
   width: calc(100% - 8px);
   height: calc(100% - 8px);
   border-radius: 4px;
-  border: 1px solid rgba(255, 215, 0, 0.15);
-  background:
-    repeating-linear-gradient(
-      45deg,
-      transparent,
-      transparent 4px,
-      rgba(255, 215, 0, 0.04) 4px,
-      rgba(255, 215, 0, 0.04) 5px
-    ),
-    repeating-linear-gradient(
-      -45deg,
-      transparent,
-      transparent 4px,
-      rgba(255, 215, 0, 0.04) 4px,
-      rgba(255, 215, 0, 0.04) 5px
-    );
+  border: 1.5px solid rgba(184, 150, 46, 0.4);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.entry-card__dots {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(184, 150, 46, 0.2) 1px, transparent 1px);
+  background-size: 6px 6px;
+}
+
+.entry-card__chip {
+  position: relative;
+  z-index: 1;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    #b8962e 0deg 22.5deg, #0e1124 22.5deg 45deg,
+    #b8962e 45deg 67.5deg, #0e1124 67.5deg 90deg,
+    #b8962e 90deg 112.5deg, #0e1124 112.5deg 135deg,
+    #b8962e 135deg 157.5deg, #0e1124 157.5deg 180deg,
+    #b8962e 180deg 202.5deg, #0e1124 202.5deg 225deg,
+    #b8962e 225deg 247.5deg, #0e1124 247.5deg 270deg,
+    #b8962e 270deg 292.5deg, #0e1124 292.5deg 315deg,
+    #b8962e 315deg 337.5deg, #0e1124 337.5deg 360deg
+  );
+  border: 1.5px solid #b8962e;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.entry-card__chip-inner {
+  position: absolute;
+  width: 72%;
+  height: 72%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 40%, #161b38, #0e1124);
+  border: 1px solid #b8962e;
+  box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.6);
+}
+
+.entry-card__spade {
+  position: relative;
+  z-index: 1;
+  color: #b8962e;
+  font-size: 8px;
+  line-height: 1;
 }
 
 .entry-suit { font-size: 20px; font-weight: 900; font-family: 'Georgia', serif; }
