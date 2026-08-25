@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Crown, Diamond, Heart, Club, Spade, Clock, LogOut, Flag, HelpCircle } from '@lucide/vue'
+import { Crown, Diamond, Heart, Club, Spade, Clock, LogOut, Flag, HelpCircle, EyeOff, Eye } from '@lucide/vue'
 import type { GameState } from '../../types/poker'
 
 const props = defineProps<{
@@ -65,6 +65,11 @@ const latestHandResult = computed(() => {
 const showReveal = ref(false)
 const showLeaveModal = ref(false)
 const showHelpModal = ref(false)
+const cardsHidden = ref(false)
+
+watch(() => props.gameState.handNumber, () => {
+  cardsHidden.value = false
+})
 
 watch(() => props.gameState.phase, (phase) => {
   if (phase === 'showdown' && latestHandResult.value) {
@@ -173,7 +178,11 @@ watch(() => props.gameState.phase, (phase) => {
           :is-myself="true"
           :is-winner="latestHandResult?.winners?.some(w => w.winnerId === myPlayer.id) && gameState.phase === 'showdown'"
         />
-        <GameHandCards :cards="myHand" />
+        <GameHandCards :cards="myHand" :face-down="cardsHidden" />
+        <button class="poker-table__hide-cards" @click="cardsHidden = !cardsHidden" :title="cardsHidden ? 'Mostrar cartas' : 'Ocultar cartas'">
+          <EyeOff v-if="!cardsHidden" :size="14" />
+          <Eye v-else :size="14" />
+        </button>
       </div>
 
       <div v-if="isMyTurn && gameState.phase !== 'waiting' && gameState.phase !== 'showdown'" class="poker-table__timer">
@@ -469,6 +478,26 @@ watch(() => props.gameState.phase, (phase) => {
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.3);
   color: #fff;
+}
+
+.poker-table__hide-cards {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 215, 0, 0.15);
+  background: rgba(0, 0, 0, 0.4);
+  color: rgba(255, 215, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.poker-table__hide-cards:hover {
+  background: rgba(255, 215, 0, 0.1);
+  border-color: rgba(255, 215, 0, 0.3);
+  color: #ffd700;
 }
 
 .leave-modal {

@@ -21,6 +21,15 @@ const suitSymbol = computed(() => {
 const suitColor = computed(() => {
   return ['hearts', 'diamonds'].includes(props.card.suit) ? 'red' : 'black'
 })
+
+const flipping = ref(false)
+let flipTimeout: ReturnType<typeof setTimeout> | null = null
+
+watch(() => props.faceDown, () => {
+  if (flipTimeout) clearTimeout(flipTimeout)
+  flipping.value = true
+  flipTimeout = setTimeout(() => { flipping.value = false }, 500)
+})
 </script>
 
 <template>
@@ -30,9 +39,10 @@ const suitColor = computed(() => {
       'card--face-down': faceDown,
       'card--small': small,
       'card--dimmed': dimmed,
+      'card--flipping': flipping,
     }"
   >
-    <template v-if="!faceDown">
+    <div class="card__face card__front">
       <div class="card__corner card__corner--top" :class="`card__corner--${suitColor}`">
         <span class="card__rank">{{ card.rank }}</span>
         <span class="card__suit-symbol">{{ suitSymbol }}</span>
@@ -44,14 +54,12 @@ const suitColor = computed(() => {
         <span class="card__rank">{{ card.rank }}</span>
         <span class="card__suit-symbol">{{ suitSymbol }}</span>
       </div>
-    </template>
-    <template v-else>
-      <div class="card__back">
-        <div class="card__back-pattern">
-          <span class="card__back-text">DR</span>
-        </div>
+    </div>
+    <div class="card__face card__back">
+      <div class="card__back-pattern">
+        <span class="card__back-text">DR</span>
       </div>
-    </template>
+    </div>
   </div>
 </template>
 
@@ -60,41 +68,66 @@ const suitColor = computed(() => {
   width: 52px;
   height: 72px;
   border-radius: 5px;
-  background: #fff;
-  border: 1.5px solid #ccc;
   position: relative;
-  box-shadow:
-    0 2px 4px rgba(0, 0, 0, 0.2),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+  perspective: 400px;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.card__face {
+  width: 100%;
+  height: 100%;
+  border-radius: 5px;
+  border: 1.5px solid #ccc;
+  position: absolute;
+  top: 0;
+  left: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transition: transform 0.5s ease;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   padding: 3px 4px;
   font-family: system-ui, -apple-system, sans-serif;
-  user-select: none;
-  flex-shrink: 0;
   overflow: hidden;
 }
-.card--small {
-  width: 36px;
-  height: 50px;
-  padding: 2px 3px;
+
+.card__front {
+  background: #fff;
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.2),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+  transform: rotateY(0deg);
+  z-index: 2;
 }
 
-/* Face down */
-.card--face-down {
+.card__back {
   background: linear-gradient(135deg, #1a1a5e 0%, #2d2d8a 50%, #1a1a5e 100%);
   border-color: #4a4a8a;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-}
-.card--face-down .card__back {
-  width: 100%;
-  height: 100%;
-  display: flex;
+  transform: rotateY(180deg);
+  z-index: 1;
   align-items: center;
   justify-content: center;
 }
-.card--face-down .card__back-pattern {
+
+.card--face-down .card__front {
+  transform: rotateY(180deg);
+}
+.card--face-down .card__back {
+  transform: rotateY(360deg);
+}
+
+.card--small {
+  width: 36px;
+  height: 50px;
+}
+.card--small .card__face {
+  padding: 2px 3px;
+}
+
+.card__back-pattern {
   width: 80%;
   height: 80%;
   border: 1.5px solid rgba(255, 215, 0, 0.25);
@@ -110,13 +143,13 @@ const suitColor = computed(() => {
     rgba(255, 215, 0, 0.04) 6px
   );
 }
-.card--face-down .card__back-text {
+.card__back-text {
   color: rgba(255, 215, 0, 0.5);
   font-size: 11px;
   font-weight: bold;
   letter-spacing: 2px;
 }
-.card--small .card--face-down .card__back-text {
+.card--small .card__back-text {
   font-size: 8px;
 }
 
@@ -177,14 +210,18 @@ const suitColor = computed(() => {
   .card {
     width: 42px;
     height: 58px;
-    padding: 2px 3px;
     border-radius: 4px;
-    border-width: 1px;
   }
   .card--small {
     width: 30px;
     height: 42px;
+  }
+  .card--small .card__face {
     padding: 1px 2px;
+  }
+  .card__face {
+    padding: 2px 3px;
+    border-width: 1px;
   }
   .card__rank { font-size: 11px; }
   .card__suit-symbol { font-size: 9px; }
