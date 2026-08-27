@@ -228,12 +228,17 @@ const debts = computed(() => {
           :key="i"
           class="end-debt"
         >
-          <div class="end-debt__left">
-            <span class="end-debt__from">{{ debt.from }}</span>
-            <span class="end-debt__arrow">&rarr;</span>
-            <span class="end-debt__to">{{ debt.to }}</span>
+          <div class="end-debt__top">
+            <div class="end-debt__left">
+              <span class="end-debt__from">{{ debt.from }}</span>
+              <span class="end-debt__arrow">&rarr;</span>
+              <span class="end-debt__to">{{ debt.to }}</span>
+            </div>
+            <span class="end-debt__amount">${{ debt.amount.toLocaleString() }}</span>
           </div>
-          <span class="end-debt__amount">${{ debt.amount.toLocaleString() }}</span>
+          <div class="end-debt__subtitle">
+            {{ debt.from }} le pasa ${{ debt.amount.toLocaleString() }} a {{ debt.to }}
+          </div>
         </div>
       </div>
 
@@ -584,13 +589,19 @@ const debts = computed(() => {
 
 .end-debt {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 4px;
   padding: 14px 16px;
   background: rgba(255, 255, 255, 0.025);
   border: 1px solid rgba(255, 255, 255, 0.04);
   border-radius: 12px;
   margin-bottom: 6px;
+}
+
+.end-debt__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .end-debt__left {
@@ -621,6 +632,12 @@ const debts = computed(() => {
   font-size: 15px;
   font-weight: 700;
   font-family: monospace;
+}
+
+.end-debt__subtitle {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.35);
+  letter-spacing: 0.3px;
 }
 
 /* ── Footer ── */
