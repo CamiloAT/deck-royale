@@ -173,7 +173,7 @@ const debts = computed(() => {
             <span class="end-rank__name">
               {{ player.nickname }}
               <span v-if="player.id === myPlayerId" class="end-rank__you">TU</span>
-              <span v-if="player.departed" class="end-rank__left">se retiro</span>
+              <span v-if="player.departed" class="end-rank__left">se salio de la sala</span>
             </span>
             <span class="end-rank__stack">${{ player.chips.toLocaleString() }} fichas</span>
           </div>
@@ -423,6 +423,8 @@ const debts = computed(() => {
 }
 
 .end-rank--departed {
+}
+.end-rank--departed .end-rank__name {
   opacity: 0.4;
 }
 
