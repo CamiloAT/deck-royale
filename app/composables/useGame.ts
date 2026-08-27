@@ -11,6 +11,10 @@ interface GameStore {
   showEntry: boolean
   showTransition: boolean
   transitionHandNumber: number
+  showdownTimerEndAt: number
+  showdownSkipCount: number
+  showdownSkipTotal: number
+  mySkippedShowdown: boolean
 }
 
 const state = reactive<GameStore>({
@@ -24,6 +28,10 @@ const state = reactive<GameStore>({
   showEntry: false,
   showTransition: false,
   transitionHandNumber: 0,
+  showdownTimerEndAt: 0,
+  showdownSkipCount: 0,
+  showdownSkipTotal: 0,
+  mySkippedShowdown: false,
 })
 
 const STORAGE_KEY = 'deck-royale-session'
@@ -143,6 +151,25 @@ export function useGame() {
       state.gameOverData = null
       state.showTransition = true
       state.transitionHandNumber = data.handNumber
+      state.showdownTimerEndAt = 0
+      state.showdownSkipCount = 0
+      state.showdownSkipTotal = 0
+      state.mySkippedShowdown = false
+    })
+
+    socket.on('showdown-timer', (data: { endsAt: number }) => {
+      state.showdownTimerEndAt = data.endsAt
+      state.showdownSkipCount = 0
+      state.showdownSkipTotal = 0
+      state.mySkippedShowdown = false
+    })
+
+    socket.on('showdown-skip-update', (data: { count: number; total: number; playerId: string }) => {
+      state.showdownSkipCount = data.count
+      state.showdownSkipTotal = data.total
+      if (data.playerId === state.player?.id) {
+        state.mySkippedShowdown = true
+      }
     })
   }
 
@@ -274,6 +301,14 @@ export function useGame() {
     })
   }
 
+  function showdownSkip(): Promise<{ success: boolean } | { error: string }> {
+    return new Promise((resolve) => {
+      socket.emit('showdown-skip', (response: any) => {
+        resolve(response)
+      })
+    })
+  }
+
   return {
     state: readonly(state),
     connect,
@@ -290,5 +325,6 @@ export function useGame() {
     clearGameOver,
     onEntryDone,
     onTransitionDone,
+    showdownSkip,
   }
 }

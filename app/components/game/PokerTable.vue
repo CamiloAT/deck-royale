@@ -12,7 +12,7 @@ const emit = defineEmits<{
   (e: 'leave'): void
 }>()
 
-const { state, endGame } = useGame()
+const { state, endGame, showdownSkip } = useGame()
 
 const myPlayer = computed(() =>
   props.gameState.players.find(p => p.id === props.myPlayerId)
@@ -31,6 +31,10 @@ async function handleEndGame() {
     showEndGameConfirm.value = false
     endGameError.value = ''
   }
+}
+
+async function handleSkip() {
+  await showdownSkip()
 }
 
 const otherPlayers = computed(() =>
@@ -84,7 +88,12 @@ watch(() => props.gameState.phase, (phase) => {
     :players="gameState.players"
     :winners="latestHandResult.winners"
     :community-cards="latestHandResult.communityCards"
+    :countdown-end-at="state.showdownTimerEndAt"
+    :skip-count="state.showdownSkipCount"
+    :skip-total="state.showdownSkipTotal"
+    :my-skipped="state.mySkippedShowdown"
     @done="showReveal = false"
+    @skip="handleSkip"
   />
   <div class="poker-table">
     <!-- Help button -->

@@ -1,15 +1,20 @@
 <script setup lang="ts">
-import { Crown } from '@lucide/vue'
+import { Crown, SkipForward } from '@lucide/vue'
 import type { Player, PotWinner, Card } from '../../types/poker'
 
 const props = defineProps<{
   players: Player[]
   winners: PotWinner[]
   communityCards: Card[]
+  countdownEndAt: number
+  skipCount: number
+  skipTotal: number
+  mySkipped: boolean
 }>()
 
 const emit = defineEmits<{
   (e: 'done'): void
+  (e: 'skip'): void
 }>()
 
 const revealedIndex = ref(-1)
@@ -17,6 +22,8 @@ const showCommunity = ref(false)
 const showPlayers = ref(false)
 const showWinner = ref(false)
 const phase = ref<'in' | 'out'>('in')
+const countdownSeconds = ref(15)
+let countdownInterval: ReturnType<typeof setInterval> | null = null
 
 const nonFoldedPlayers = computed(() =>
   props.players.filter(p => !p.folded && p.hand.length > 0)
@@ -38,6 +45,10 @@ const mainWinner = computed(() => {
   }
 })
 
+const allSkipped = computed(() =>
+  props.skipTotal > 0 && props.skipCount >= props.skipTotal
+)
+
 function getPlayerHandName(playerId: string): string {
   const w = props.winners.find(w => w.winnerId === playerId)
   return w?.handName || ''
@@ -47,6 +58,18 @@ function getPlayerAmountWon(playerId: string): number {
   return props.winners
     .filter(w => w.winnerId === playerId)
     .reduce((sum, w) => sum + w.amountWon, 0)
+}
+
+function startCountdown() {
+  const updateCountdown = () => {
+    const remaining = Math.max(0, Math.ceil((props.countdownEndAt - Date.now()) / 1000))
+    countdownSeconds.value = remaining
+    if (remaining <= 0) {
+      if (countdownInterval) clearInterval(countdownInterval)
+    }
+  }
+  updateCountdown()
+  countdownInterval = setInterval(updateCountdown, 200)
 }
 
 onMounted(() => {
@@ -62,15 +85,33 @@ onMounted(() => {
       i++
       if (i >= nonFoldedPlayers.value.length) {
         clearInterval(interval)
-        setTimeout(() => { showWinner.value = true }, 400)
+        setTimeout(() => {
+          showWinner.value = true
+          startCountdown()
+        }, 400)
       }
     }, 400)
   }, 1200)
 
-  // Phase 3: Fade out
-  setTimeout(() => { phase.value = 'out' }, 4500)
-  setTimeout(() => emit('done'), 5500)
+  // Phase 3: Fade out when countdown ends
+  const checkEnd = setInterval(() => {
+    if (countdownSeconds.value <= 0 || allSkipped.value) {
+      clearInterval(checkEnd)
+      phase.value = 'out'
+      setTimeout(() => emit('done'), 800)
+    }
+  }, 200)
 })
+
+onUnmounted(() => {
+  if (countdownInterval) clearInterval(countdownInterval)
+})
+
+function handleSkip() {
+  if (!props.mySkipped) {
+    emit('skip')
+  }
+}
 </script>
 
 <template>
@@ -183,6 +224,40 @@ onMounted(() => {
         top: `${10 + Math.random() * 80}%`,
         animationDelay: `${(i * 0.15) % 2}s`,
       }"></div>
+    </div>
+
+    <!-- Countdown & Skip -->
+    <div v-if="showWinner" class="reveal-footer">
+      <div class="reveal-countdown">
+        <div class="reveal-countdown__bar">
+          <div
+            class="reveal-countdown__fill"
+            :style="{ width: `${(countdownSeconds / 15) * 100}%` }"
+          ></div>
+        </div>
+        <div class="reveal-countdown__text">
+          Siguiente mano en <span class="reveal-countdown__seconds">{{ countdownSeconds }}s</span>
+        </div>
+      </div>
+
+      <div class="reveal-skip">
+        <button
+          class="reveal-skip__btn"
+          :class="{
+            'reveal-skip__btn--skipped': mySkipped,
+            'reveal-skip__btn--all': allSkipped,
+          }"
+          :disabled="mySkipped"
+          @click="handleSkip"
+        >
+          <SkipForward :size="16" />
+          <span v-if="mySkipped">Listo</span>
+          <span v-else>Saltar</span>
+        </button>
+        <div v-if="skipTotal > 1" class="reveal-skip__status">
+          {{ skipCount }}/{{ skipTotal }} listos
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -487,6 +562,97 @@ onMounted(() => {
   animation: sparkle 1.5s ease-in-out infinite;
 }
 
+/* Footer: Countdown + Skip */
+.reveal-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+  animation: fadeInUp 0.5s ease-out 0.3s both;
+}
+
+.reveal-countdown {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.reveal-countdown__bar {
+  width: 200px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.reveal-countdown__fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ffd700, #b8962e);
+  border-radius: 2px;
+  transition: width 0.2s linear;
+}
+.reveal-countdown__text {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 1px;
+}
+.reveal-countdown__seconds {
+  color: #ffd700;
+  font-weight: 700;
+}
+
+.reveal-skip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.reveal-skip__btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 20px;
+  border-radius: 8px;
+  border: 1.5px solid rgba(255, 215, 0, 0.3);
+  background: rgba(255, 215, 0, 0.08);
+  color: #ffd700;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  pointer-events: auto;
+}
+.reveal-skip__btn:hover:not(:disabled) {
+  background: rgba(255, 215, 0, 0.15);
+  border-color: rgba(255, 215, 0, 0.5);
+  transform: translateY(-1px);
+}
+.reveal-skip__btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+.reveal-skip__btn--skipped {
+  background: rgba(74, 222, 128, 0.1);
+  border-color: rgba(74, 222, 128, 0.3);
+  color: #4ade80;
+  cursor: default;
+}
+.reveal-skip__btn--all {
+  background: rgba(74, 222, 128, 0.15);
+  border-color: rgba(74, 222, 128, 0.5);
+  color: #4ade80;
+}
+.reveal-skip__status {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+  letter-spacing: 1px;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 @keyframes titlePulse {
   0% { text-shadow: 0 0 20px rgba(255, 215, 0, 0.5); }
   100% { text-shadow: 0 0 30px rgba(255, 215, 0, 0.8), 0 0 60px rgba(255, 215, 0, 0.3); }
@@ -521,5 +687,6 @@ onMounted(() => {
   .reveal-card-wrapper { width: 42px; height: 58px; }
   .reveal-community-card { width: 42px; height: 58px; }
   .reveal-community__cards { gap: 5px; }
+  .reveal-countdown__bar { width: 160px; }
 }
 </style>

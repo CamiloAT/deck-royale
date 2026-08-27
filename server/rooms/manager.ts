@@ -20,6 +20,7 @@ const disconnectTimers = new Map<string, ReturnType<typeof setTimeout>>()
 const lobbyCleanupTimers = new Map<string, ReturnType<typeof setTimeout>>()
 const pausedTurnRemaining = new Map<string, number>()
 const departedPlayers = new Map<string, { id: string; nickname: string; chips: number }[]>()
+const showdownSkips = new Map<string, Set<string>>()
 
 export const TURN_DURATION = 60
 export const DISCONNECT_GRACE = 15
@@ -852,6 +853,34 @@ export function endGameByHost(roomId: string, playerId: string): { error: string
   return null
 }
 
+export function showdownSkip(roomId: string, playerId: string): { skipped: boolean; allSkipped: boolean; count: number; total: number } {
+  const game = games.get(roomId)
+  if (!game || game.phase !== 'showdown') return { skipped: false, allSkipped: false, count: 0, total: 0 }
+
+  if (!showdownSkips.has(roomId)) showdownSkips.set(roomId, new Set())
+  const skips = showdownSkips.get(roomId)!
+  if (skips.has(playerId)) return { skipped: true, allSkipped: false, count: skips.size, total: 0 }
+
+  skips.add(playerId)
+
+  const nonFoldedPlayers = game.players.filter(p => !p.folded)
+  const allSkipped = nonFoldedPlayers.every(p => skips.has(p.id))
+
+  return { skipped: true, allSkipped, count: skips.size, total: nonFoldedPlayers.length }
+}
+
+export function getShowdownSkips(roomId: string): { count: number; total: number } {
+  const game = games.get(roomId)
+  if (!game) return { count: 0, total: 0 }
+  const skips = showdownSkips.get(roomId)
+  const nonFoldedPlayers = game.players.filter(p => !p.folded)
+  return { count: skips?.size ?? 0, total: nonFoldedPlayers.length }
+}
+
+export function resetShowdownSkips(roomId: string): void {
+  showdownSkips.delete(roomId)
+}
+
 export function nextHand(roomId: string): GameState | null {
   const room = rooms.get(roomId)
   const game = games.get(roomId)
@@ -859,6 +888,8 @@ export function nextHand(roomId: string): GameState | null {
 
   const alivePlayers = game.players.filter(p => p.chips > 0)
   if (alivePlayers.length < 2) return null
+
+  resetShowdownSkips(roomId)
 
   const handHistory = [...game.handHistory]
   const handNumber = game.handNumber

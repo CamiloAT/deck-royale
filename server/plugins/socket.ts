@@ -6,10 +6,13 @@ import {
   startDisconnectTimer, cancelDisconnectTimer,
   startLobbyCleanup, cancelLobbyCleanup,
   setOnAutoFold, setOnPlayerKicked, endGameByHost,
+  showdownSkip, getShowdownSkips,
 } from '../rooms/manager'
 import type { GameState } from '../../types/poker'
 
 let io: Server | null = null
+const showdownTimers = new Map<string, ReturnType<typeof setTimeout>>()
+export const SHOWDOWN_DURATION = 15000
 
 export function defineSocketPlugin() {
   return defineNitroPlugin((nitroApp) => {
@@ -37,16 +40,24 @@ function handleShowdownAndNext(ioRef: Server, roomId: string, game: GameState) {
         ioRef.to(roomId).emit('game-over', gameOverData)
       }, 6000)
     } else {
-      setTimeout(() => {
-        ioRef.to(roomId).emit('hand-started', { handNumber: game.handNumber })
-      }, 5500)
+      const existingTimer = showdownTimers.get(roomId)
+      if (existingTimer) clearTimeout(existingTimer)
 
-      setTimeout(() => {
-        const newGame = nextHand(roomId)
-        if (newGame) {
-          ioRef.to(roomId).emit('game-update', newGame)
-        }
-      }, 6000)
+      const showdownEndAt = Date.now() + SHOWDOWN_DURATION
+      ioRef.to(roomId).emit('showdown-timer', { endsAt: showdownEndAt })
+
+      const timer = setTimeout(() => {
+        showdownTimers.delete(roomId)
+        ioRef.to(roomId).emit('hand-started', { handNumber: game.handNumber })
+        setTimeout(() => {
+          const newGame = nextHand(roomId)
+          if (newGame) {
+            ioRef.to(roomId).emit('game-update', newGame)
+          }
+        }, 500)
+      }, SHOWDOWN_DURATION)
+
+      showdownTimers.set(roomId, timer)
     }
   }
 }
@@ -271,8 +282,44 @@ function setupSocketEvents(io: Server) {
         if (!roomId || !playerId) { callback({ error: 'No estas en una sala' }); return }
         const result = endGameByHost(roomId, playerId)
         if (result && 'error' in result) { callback({ error: result.error }); return }
+        const timer = showdownTimers.get(roomId)
+        if (timer) { clearTimeout(timer); showdownTimers.delete(roomId) }
         const gameOverData = getGameOverData(roomId)
         io!.to(roomId).emit('game-over', gameOverData)
+        callback({ success: true })
+      } catch (e: any) { callback({ error: e.message }) }
+    })
+
+    socket.on('showdown-skip', (callback: any) => {
+      try {
+        const { roomId, playerId } = socket.data
+        if (!roomId || !playerId) { callback({ error: 'No estas en una sala' }); return }
+
+        const result = showdownSkip(roomId, playerId)
+        if (!result.skipped) { callback({ error: 'No se puede saltar' }); return }
+
+        const skips = getShowdownSkips(roomId)
+        io!.to(roomId).emit('showdown-skip-update', { count: skips.count, total: skips.total, playerId })
+
+        if (result.allSkipped) {
+          const timer = showdownTimers.get(roomId)
+          if (timer) {
+            clearTimeout(timer)
+            showdownTimers.delete(roomId)
+          }
+
+          const game = getGame(roomId)
+          if (game && game.phase === 'showdown') {
+            io!.to(roomId).emit('hand-started', { handNumber: game.handNumber })
+            setTimeout(() => {
+              const newGame = nextHand(roomId)
+              if (newGame) {
+                io!.to(roomId).emit('game-update', newGame)
+              }
+            }, 500)
+          }
+        }
+
         callback({ success: true })
       } catch (e: any) { callback({ error: e.message }) }
     })
