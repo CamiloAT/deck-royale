@@ -23,7 +23,10 @@ const showPlayers = ref(false)
 const showWinner = ref(false)
 const phase = ref<'in' | 'out'>('in')
 const countdownSeconds = ref(15)
-let countdownInterval: ReturnType<typeof setInterval> | null = null
+const countdownPercent = ref(100)
+let rafId: number | null = null
+let countdownStartTime = 0
+const COUNTDOWN_DURATION = 15000
 
 const nonFoldedPlayers = computed(() =>
   props.players.filter(p => !p.folded && p.hand.length > 0)
@@ -60,16 +63,45 @@ function getPlayerAmountWon(playerId: string): number {
     .reduce((sum, w) => sum + w.amountWon, 0)
 }
 
+function interpolateColor(t: number, from: [number, number, number], to: [number, number, number]): string {
+  const r = Math.round(from[0] + (to[0] - from[0]) * t)
+  const g = Math.round(from[1] + (to[1] - from[1]) * t)
+  const b = Math.round(from[2] + (to[2] - from[2]) * t)
+  return `rgb(${r}, ${g}, ${b})`
+}
+
+const GREEN = [34, 197, 94] as [number, number, number]
+const GOLD = [255, 215, 0] as [number, number, number]
+const ORANGE = [249, 115, 22] as [number, number, number]
+const RED = [239, 68, 68] as [number, number, number]
+
+function getColorForPercent(pct: number): string {
+  const p = pct / 100
+  if (p > 0.4) {
+    return interpolateColor((p - 0.4) / 0.6, GOLD, GREEN)
+  } else if (p > 0.2) {
+    return interpolateColor((p - 0.2) / 0.2, ORANGE, GOLD)
+  } else {
+    return interpolateColor(p / 0.2, RED, ORANGE)
+  }
+}
+
+const countdownColor = computed(() => getColorForPercent(countdownPercent.value))
+
 function startCountdown() {
-  const updateCountdown = () => {
-    const remaining = Math.max(0, Math.ceil((props.countdownEndAt - Date.now()) / 1000))
-    countdownSeconds.value = remaining
-    if (remaining <= 0) {
-      if (countdownInterval) clearInterval(countdownInterval)
+  countdownStartTime = props.countdownEndAt - COUNTDOWN_DURATION
+  const tick = () => {
+    const elapsed = Date.now() - countdownStartTime
+    const remaining = Math.max(0, COUNTDOWN_DURATION - elapsed)
+    const pct = (remaining / COUNTDOWN_DURATION) * 100
+    countdownPercent.value = pct
+    countdownSeconds.value = Math.ceil(remaining / 1000)
+
+    if (remaining > 0) {
+      rafId = requestAnimationFrame(tick)
     }
   }
-  updateCountdown()
-  countdownInterval = setInterval(updateCountdown, 200)
+  rafId = requestAnimationFrame(tick)
 }
 
 onMounted(() => {
@@ -104,7 +136,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  if (countdownInterval) clearInterval(countdownInterval)
+  if (rafId) cancelAnimationFrame(rafId)
 })
 
 function handleSkip() {
@@ -232,11 +264,11 @@ function handleSkip() {
         <div class="reveal-countdown__bar">
           <div
             class="reveal-countdown__fill"
-            :style="{ width: `${(countdownSeconds / 15) * 100}%` }"
+            :style="{ width: `${countdownPercent}%`, background: countdownColor }"
           ></div>
         </div>
         <div class="reveal-countdown__text">
-          Siguiente mano en <span class="reveal-countdown__seconds">{{ countdownSeconds }}s</span>
+          Siguiente mano en <span class="reveal-countdown__seconds" :style="{ color: countdownColor }">{{ countdownSeconds }}s</span>
         </div>
       </div>
 
@@ -587,9 +619,7 @@ function handleSkip() {
 }
 .reveal-countdown__fill {
   height: 100%;
-  background: linear-gradient(90deg, #ffd700, #b8962e);
   border-radius: 2px;
-  transition: width 0.2s linear;
 }
 .reveal-countdown__text {
   font-size: 12px;
@@ -597,7 +627,6 @@ function handleSkip() {
   letter-spacing: 1px;
 }
 .reveal-countdown__seconds {
-  color: #ffd700;
   font-weight: 700;
 }
 
