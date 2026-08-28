@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const { state, connect, createRoom, joinRoom, leaveRoom, startGame, performAction, updateRoom, clearGameOver, onEntryDone, onTransitionDone, setAvatar } = useGame()
+const { state, connect, createRoom, joinRoom, leaveRoom, startGame, performAction, updateRoom, clearGameOver, onEntryDone, onTransitionDone, setAvatar, playAgain } = useGame()
 
 connect()
 
@@ -51,10 +51,21 @@ async function handleSelectAvatar(avatarType: string) {
   await setAvatar(avatarType)
 }
 
+const hostLeft = computed(() => {
+  if (!state.gameOverData || !state.room) return false
+  const host = state.room.players.find(p => p.id === state.gameOverData!.hostId)
+  return !host || !host.isConnected
+})
+
 function handleLeaveGameEnd() {
   clearGameOver()
   leaveRoom()
   navigateTo('/')
+}
+
+async function handlePlayAgain() {
+  const result = await playAgain()
+  if ('error' in result) error.value = result.error
 }
 </script>
 
@@ -78,7 +89,12 @@ function handleLeaveGameEnd() {
         <GameEndModal
           :data="state.gameOverData"
           :my-player-id="state.player?.id || ''"
+          :play-again-count="state.playAgainCount"
+          :play-again-total="state.playAgainTotal"
+          :my-play-again="state.myPlayAgain"
+          :host-left="hostLeft"
           @leave="handleLeaveGameEnd"
+          @play-again="handlePlayAgain"
         />
       </template>
 

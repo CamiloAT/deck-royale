@@ -1,14 +1,19 @@
 <script setup lang="ts">
-import { History, ArrowRightLeft, Home, LogOut, TrendingUp, TrendingDown, Crown, Sparkles } from '@lucide/vue'
+import { History, ArrowRightLeft, Home, LogOut, TrendingUp, TrendingDown, Crown, Sparkles, RotateCcw } from '@lucide/vue'
 import type { GameOverData } from '../../types/poker'
 
 const props = defineProps<{
   data: GameOverData
   myPlayerId: string
+  playAgainCount: number
+  playAgainTotal: number
+  myPlayAgain: boolean
+  hostLeft: boolean
 }>()
 
 const emit = defineEmits<{
   (e: 'leave'): void
+  (e: 'play-again'): void
 }>()
 
 const activeTab = ref<'standings' | 'history' | 'debts'>('standings')
@@ -244,10 +249,34 @@ const debts = computed(() => {
 
       <!-- Footer -->
       <div class="end-footer">
-        <button class="end-footer__btn" @click="emit('leave')">
-          <LogOut :size="16" />
-          Salir a la Sala
-        </button>
+        <div class="end-footer__buttons">
+          <button
+            v-if="hostLeft"
+            class="end-footer__btn end-footer__btn--play end-footer__btn--disabled"
+            disabled
+          >
+            <RotateCcw :size="16" />
+            El host salió de la partida
+          </button>
+          <button
+            v-else
+            class="end-footer__btn end-footer__btn--play"
+            :class="{ 'end-footer__btn--ready': myPlayAgain }"
+            :disabled="myPlayAgain"
+            @click="emit('play-again')"
+          >
+            <RotateCcw :size="16" />
+            <span v-if="myPlayAgain">Listo ({{ playAgainCount }}/{{ playAgainTotal }})</span>
+            <span v-else>Jugar de Nuevo</span>
+          </button>
+          <div v-if="!hostLeft && !myPlayAgain && playAgainCount > 0" class="end-footer__play-hint">
+            {{ playAgainCount }}/{{ playAgainTotal }} ya le dieron
+          </div>
+          <button class="end-footer__btn" @click="emit('leave')">
+            <LogOut :size="16" />
+            Salir a la Sala
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -648,6 +677,12 @@ const debts = computed(() => {
   border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
+.end-footer__buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .end-footer__btn {
   width: 100%;
   padding: 14px;
@@ -667,7 +702,41 @@ const debts = computed(() => {
   border: 1px solid rgba(255, 215, 0, 0.2);
 }
 
-.end-footer__btn:hover {
+.end-footer__btn--play {
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.15), rgba(74, 222, 128, 0.05));
+  color: #4ade80;
+  border: 1px solid rgba(74, 222, 128, 0.2);
+}
+
+.end-footer__btn--play:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.25), rgba(74, 222, 128, 0.1));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(74, 222, 128, 0.15);
+}
+
+.end-footer__btn--ready {
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.08), rgba(74, 222, 128, 0.03));
+  color: rgba(74, 222, 128, 0.6);
+  border-color: rgba(74, 222, 128, 0.1);
+  cursor: default;
+}
+
+.end-footer__btn--disabled {
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.06);
+  cursor: not-allowed;
+}
+
+.end-footer__play-hint {
+  text-align: center;
+  font-size: 11px;
+  color: rgba(74, 222, 128, 0.45);
+  margin-top: -4px;
+  letter-spacing: 0.3px;
+}
+
+.end-footer__btn:hover:not(.end-footer__btn--ready):not(.end-footer__btn--play) {
   background: linear-gradient(135deg, rgba(255, 215, 0, 0.25), rgba(255, 215, 0, 0.1));
   transform: translateY(-1px);
   box-shadow: 0 4px 20px rgba(255, 215, 0, 0.15);

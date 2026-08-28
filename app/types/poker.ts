@@ -118,4 +118,5 @@ export interface GameOverData {
   players: { id: string; nickname: string; chips: number; departed?: boolean }[]
   handHistory: HandResult[]
   startingChips: Record<string, number>
+  hostId: string
 }

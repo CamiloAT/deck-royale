@@ -791,6 +791,23 @@ export function resetRoom(roomId: string): void {
   departedPlayers.delete(roomId)
 }
 
+export function resetRoomForNewGame(roomId: string): void {
+  const room = rooms.get(roomId)
+  if (!room) return
+
+  room.started = false
+  for (const p of room.players) {
+    p.chips = room.minBuyIn
+  }
+
+  games.delete(roomId)
+  cancelTurnTimer(roomId)
+  cancelDisconnectTimer(roomId)
+  pausedTurnRemaining.delete(roomId)
+  departedPlayers.delete(roomId)
+  resetShowdownSkips(roomId)
+}
+
 export function hasGameEnded(roomId: string): boolean {
   const game = games.get(roomId)
   if (!game) return true
@@ -826,6 +843,7 @@ export function getGameOverData(roomId: string): { players: { id: string; nickna
     players: allPlayers,
     handHistory: game.handHistory,
     startingChips,
+    hostId: game.hostId,
   }
 }
 

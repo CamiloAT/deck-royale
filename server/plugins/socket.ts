@@ -6,12 +6,13 @@ import {
   startDisconnectTimer, cancelDisconnectTimer,
   startLobbyCleanup, cancelLobbyCleanup,
   setOnAutoFold, setOnPlayerKicked, endGameByHost,
-  showdownSkip, getShowdownSkips,
+  showdownSkip, getShowdownSkips, resetRoomForNewGame,
 } from '../rooms/manager'
 import type { GameState } from '../../types/poker'
 
 let io: Server | null = null
 const showdownTimers = new Map<string, ReturnType<typeof setTimeout>>()
+const playAgainSkips = new Map<string, Set<string>>()
 export const SHOWDOWN_DURATION = 15000
 
 export function defineSocketPlugin() {
@@ -343,6 +344,39 @@ function setupSocketEvents(io: Server) {
           const rp = room.players.find(p => p.id === playerId)
           if (rp) rp.avatarType = avatarType
           io!.to(roomId).emit('room-update', room)
+        }
+
+        callback({ success: true })
+      } catch (e: any) { callback({ error: e.message }) }
+    })
+
+    socket.on('play-again', (callback: any) => {
+      try {
+        const { roomId, playerId } = socket.data
+        if (!roomId || !playerId) { callback({ error: 'No estas en una sala' }); return }
+
+        const room = getRoom(roomId)
+        if (!room) { callback({ error: 'Sala no encontrada' }); return }
+
+        if (!playAgainSkips.has(roomId)) playAgainSkips.set(roomId, new Set())
+        const skips = playAgainSkips.get(roomId)!
+
+        if (skips.has(playerId)) { callback({ error: 'Ya presionaste Jugar de Nuevo' }); return }
+        skips.add(playerId)
+
+        const connectedPlayers = room.players.filter(p => p.isConnected)
+        const allReady = connectedPlayers.every(p => skips.has(p.id))
+
+        io!.to(roomId).emit('play-again-update', { count: skips.size, total: connectedPlayers.length, playerId })
+
+        if (allReady) {
+          playAgainSkips.delete(roomId)
+          const timer = showdownTimers.get(roomId)
+          if (timer) { clearTimeout(timer); showdownTimers.delete(roomId) }
+
+          resetRoomForNewGame(roomId)
+          const updatedRoom = getRoom(roomId)
+          if (updatedRoom) io!.to(roomId).emit('room-update', updatedRoom)
         }
 
         callback({ success: true })

@@ -15,6 +15,9 @@ interface GameStore {
   showdownSkipCount: number
   showdownSkipTotal: number
   mySkippedShowdown: boolean
+  playAgainCount: number
+  playAgainTotal: number
+  myPlayAgain: boolean
 }
 
 const state = reactive<GameStore>({
@@ -32,6 +35,9 @@ const state = reactive<GameStore>({
   showdownSkipCount: 0,
   showdownSkipTotal: 0,
   mySkippedShowdown: false,
+  playAgainCount: 0,
+  playAgainTotal: 0,
+  myPlayAgain: false,
 })
 
 const STORAGE_KEY = 'deck-royale-session'
@@ -97,6 +103,14 @@ export function useGame() {
 
     socket.on('room-update', (room: Room) => {
       state.room = room
+      if (!room.started && state.gameOverData) {
+        state.gameOverData = null
+        state.gameState = null
+        state.myHand = []
+        state.playAgainCount = 0
+        state.playAgainTotal = 0
+        state.myPlayAgain = false
+      }
     })
 
     socket.on('player-left', (data: { playerId: string }) => {
@@ -124,8 +138,10 @@ export function useGame() {
 
     socket.on('game-started', (game: GameState) => {
       state.gameState = game
-      state.room = null
       state.showEntry = true
+      state.playAgainCount = 0
+      state.playAgainTotal = 0
+      state.myPlayAgain = false
     })
 
     socket.on('game-update', (game: GameState) => {
@@ -169,6 +185,14 @@ export function useGame() {
       state.showdownSkipTotal = data.total
       if (data.playerId === state.player?.id) {
         state.mySkippedShowdown = true
+      }
+    })
+
+    socket.on('play-again-update', (data: { count: number; total: number; playerId: string }) => {
+      state.playAgainCount = data.count
+      state.playAgainTotal = data.total
+      if (data.playerId === state.player?.id) {
+        state.myPlayAgain = true
       }
     })
   }
@@ -221,6 +245,9 @@ export function useGame() {
     state.gameState = null
     state.myHand = []
     state.gameOverData = null
+    state.playAgainCount = 0
+    state.playAgainTotal = 0
+    state.myPlayAgain = false
   }
 
   function clearGameOver() {
@@ -309,6 +336,14 @@ export function useGame() {
     })
   }
 
+  function playAgain(): Promise<{ success: boolean } | { error: string }> {
+    return new Promise((resolve) => {
+      socket.emit('play-again', (response: any) => {
+        resolve(response)
+      })
+    })
+  }
+
   return {
     state: readonly(state),
     connect,
@@ -326,5 +361,6 @@ export function useGame() {
     onEntryDone,
     onTransitionDone,
     showdownSkip,
+    playAgain,
   }
 }
