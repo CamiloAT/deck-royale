@@ -69,10 +69,10 @@ const latestHandResult = computed(() => {
 const showReveal = ref(false)
 const showLeaveModal = ref(false)
 const showHelpModal = ref(false)
-const cardsHidden = ref(false)
+const cardsHidden = ref(true)
 
 watch(() => props.gameState.handNumber, () => {
-  cardsHidden.value = false
+  cardsHidden.value = true
 })
 
 watch(() => props.gameState.phase, (phase) => {
