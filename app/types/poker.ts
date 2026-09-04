@@ -43,6 +43,7 @@ export interface Player {
   isConnected: boolean
   avatarType: 'classic' | 'female' | 'frog' | 'penguin'
   lastAction?: string
+  hasActed?: boolean
 }
 
 export interface Pot {

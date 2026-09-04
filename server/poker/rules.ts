@@ -12,6 +12,7 @@ export function initPlayerState(player: Player, index: number, isDealer: boolean
     allIn: false,
     isDealer,
     isTurn: false,
+    hasActed: false,
     avatarType: player.avatarType || 'classic',
   }
 }

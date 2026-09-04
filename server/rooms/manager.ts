@@ -433,7 +433,7 @@ export function performAction(
 
   switch (action) {
     case 'fold': {
-      updatedPlayers[playerIndex] = { ...player, folded: true, isTurn: false, lastAction: 'fold' }
+      updatedPlayers[playerIndex] = { ...player, folded: true, isTurn: false, lastAction: 'fold', hasActed: true }
       message = `${player.nickname} se fue`
       break
     }
@@ -442,7 +442,7 @@ export function performAction(
       if (player.bet < game.currentBet) {
         return { error: 'No puedes pasar, debes igualar o subir' }
       }
-      updatedPlayers[playerIndex] = { ...player, isTurn: false, lastAction: 'check' }
+      updatedPlayers[playerIndex] = { ...player, isTurn: false, lastAction: 'check', hasActed: true }
       message = `${player.nickname} pasa`
       break
     }
@@ -463,6 +463,7 @@ export function performAction(
         isTurn: false,
         allIn: newChips === 0,
         lastAction: 'call',
+        hasActed: true,
       }
       message = `${player.nickname} iguala ${callAmount}`
       break
@@ -488,9 +489,15 @@ export function performAction(
         isTurn: false,
         allIn: newChips === 0,
         lastAction: 'raise',
+        hasActed: true,
       }
       game.currentBet = newBet
       game.lastAggressorIndex = playerIndex
+      updatedPlayers = updatedPlayers.map((p, i) =>
+        i !== playerIndex && !p.folded && !p.allIn && p.chips > 0
+          ? { ...p, hasActed: false }
+          : p
+      )
       message = `${player.nickname} sube a ${newBet}`
       break
     }
@@ -507,10 +514,16 @@ export function performAction(
         isTurn: false,
         allIn: true,
         lastAction: 'all_in',
+        hasActed: true,
       }
       if (newBet > game.currentBet) {
         game.currentBet = newBet
         game.lastAggressorIndex = playerIndex
+        updatedPlayers = updatedPlayers.map((p, i) =>
+          i !== playerIndex && !p.folded && !p.allIn && p.chips > 0
+            ? { ...p, hasActed: false }
+            : p
+        )
       }
       message = `${player.nickname} all-in!`
       break
@@ -574,12 +587,8 @@ export function performAction(
     } else {
       shouldAdvance = false
     }
-  } else if (game.lastAggressorIndex !== -1) {
-    shouldAdvance = nextPlayerIdx === game.lastAggressorIndex
   } else {
-    const searchFrom = (game.firstActorIndex - 1 + updatedPlayers.length) % updatedPlayers.length
-    const effectiveFirstActor = nextActivePlayer(updatedPlayers, searchFrom)
-    shouldAdvance = effectiveFirstActor !== -1 && nextPlayerIdx === effectiveFirstActor
+    shouldAdvance = activePlayers.every(p => p.hasActed && p.bet === game.currentBet)
   }
 
   if (shouldAdvance) {
@@ -620,7 +629,7 @@ export function performAction(
         return { game, message: `${winnerName} gana ${totalWon}!` }
       }
 
-      updatedPlayers = updatedPlayers.map(p => ({ ...p, bet: 0 }))
+      updatedPlayers = updatedPlayers.map(p => ({ ...p, bet: 0, hasActed: false }))
       game.communityCards = newCommunity
       game.deck = communityResult.remainingDeck
       game.phase = newPhase
@@ -679,7 +688,7 @@ export function performAction(
       game.deck = remainingDeck
     }
 
-    updatedPlayers = updatedPlayers.map(p => ({ ...p, bet: 0 }))
+    updatedPlayers = updatedPlayers.map(p => ({ ...p, bet: 0, hasActed: false }))
     game.currentBet = 0
     game.phase = nextPhase
     game.lastAggressorIndex = -1
