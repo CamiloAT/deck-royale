@@ -173,21 +173,10 @@ watch(() => props.gameState.phase, (phase) => {
 
         <!-- Brand -->
         <div class="poker-table__brand">
-          <div class="poker-table__brand-line">
-            <span class="poker-table__suit-inline"><Spade :size="12" /></span>
-            <span class="poker-table__suit-inline"><Heart :size="12" /></span>
-            <span class="poker-table__suit-inline"><Club :size="12" /></span>
-            <span class="poker-table__suit-inline"><Diamond :size="12" /></span>
-          </div>
           <div class="poker-table__brand-title">
-            <Crown :size="18" class="poker-table__crown" />
-            DECK ROYALE
-          </div>
-          <div class="poker-table__brand-line">
-            <span class="poker-table__suit-inline"><Diamond :size="12" /></span>
-            <span class="poker-table__suit-inline"><Club :size="12" /></span>
-            <span class="poker-table__suit-inline"><Heart :size="12" /></span>
-            <span class="poker-table__suit-inline"><Spade :size="12" /></span>
+            <Crown :size="16" class="poker-table__crown" />
+            <span>DECK ROYALE</span>
+            <Crown :size="16" class="poker-table__crown" />
           </div>
         </div>
 
@@ -379,7 +368,6 @@ watch(() => props.gameState.phase, (phase) => {
   box-shadow:
     inset 0 0 60px rgba(0, 0, 0, 0.5),
     inset 0 0 120px rgba(0, 0, 0, 0.2),
-    inset 0 0 0 1.5px #d4a520,
     0 0 0 1.5px #d4a520,
     0 0 20px rgba(0, 0, 0, 0.6),
     0 0 40px rgba(92, 58, 26, 0.3);
@@ -436,19 +424,19 @@ watch(() => props.gameState.phase, (phase) => {
 
 .poker-table__brand-title {
   color: rgba(255, 215, 0, 0.07);
-  font-size: 60px;
+  font-size: 36px;
   font-weight: 700;
-  letter-spacing: 16px;
+  letter-spacing: 10px;
   font-family: 'Georgia', serif;
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 14px;
+  white-space: nowrap;
   text-shadow: 0 0 30px rgba(255, 215, 0, 0.04);
 }
 .poker-table__crown {
   color: rgba(255, 215, 0, 0.08);
-  width: 50px;
-  height: 50px;
+  flex-shrink: 0;
 }
 
 .poker-table__brand-line {
