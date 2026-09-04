@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Crown, Diamond, Heart, Club, Spade, Clock, LogOut, Flag, HelpCircle, EyeOff, Eye } from '@lucide/vue'
+import { Crown, Diamond, Heart, Club, Spade, Clock, LogOut, Flag, HelpCircle, EyeOff, Eye, Timer } from '@lucide/vue'
 import type { GameState } from '../../types/poker'
 
 const props = defineProps<{
@@ -60,6 +60,40 @@ const currentTurnPlayer = computed(() =>
 
 const isMyTurn = computed(() => myPlayer.value?.isTurn ?? false)
 
+const turnDurationMs = computed(() => (props.gameState.turnTimer ?? 60) * 1000)
+const turnTimeLeft = ref(0)
+const turnPercentage = ref(100)
+
+function updateTurnTimer() {
+  if (!props.gameState.turnStartedAt) { turnTimeLeft.value = 0; turnPercentage.value = 0; return }
+  const elapsed = Date.now() - props.gameState.turnStartedAt
+  const remaining = Math.max(0, turnDurationMs.value - elapsed)
+  turnTimeLeft.value = Math.ceil(remaining / 1000)
+  turnPercentage.value = Math.max(0, (remaining / turnDurationMs.value) * 100)
+}
+
+const turnColor = computed(() => {
+  if (turnTimeLeft.value <= 10) return { bg: 'rgba(239, 68, 68, 0.15)', border: 'rgba(239, 68, 68, 0.5)', text: '#ef4444' }
+  if (turnTimeLeft.value <= 20) return { bg: 'rgba(245, 158, 11, 0.12)', border: 'rgba(245, 158, 11, 0.4)', text: '#f59e0b' }
+  return { bg: 'rgba(34, 197, 94, 0.1)', border: 'rgba(34, 197, 94, 0.35)', text: '#22c55e' }
+})
+
+const turnPulseSpeed = computed(() => {
+  if (turnTimeLeft.value <= 5) return '0.4s'
+  if (turnTimeLeft.value <= 10) return '0.7s'
+  if (turnTimeLeft.value <= 20) return '1.2s'
+  return '2.5s'
+})
+
+let turnInterval: ReturnType<typeof setInterval> | null = null
+
+onMounted(() => {
+  updateTurnTimer()
+  turnInterval = setInterval(updateTurnTimer, 100)
+})
+onUnmounted(() => { if (turnInterval) clearInterval(turnInterval) })
+watch(() => props.gameState.turnStartedAt, () => updateTurnTimer())
+
 const latestHandResult = computed(() => {
   const history = props.gameState.handHistory
   if (!history || history.length === 0) return null
@@ -95,7 +129,7 @@ watch(() => props.gameState.phase, (phase) => {
     @done="showReveal = false"
     @skip="handleSkip"
   />
-  <div class="poker-table">
+  <div class="poker-table" :class="{ 'poker-table--my-turn': isMyTurn && gameState.phase !== 'waiting' && gameState.phase !== 'showdown', 'poker-table--turn-urgent': isMyTurn && turnTimeLeft <= 10 && gameState.phase !== 'waiting' && gameState.phase !== 'showdown' }">
     <!-- Help button -->
     <button class="poker-table__help" @click="showHelpModal = true" title="Reglas de poker">
       <HelpCircle :size="16" />
@@ -127,7 +161,7 @@ watch(() => props.gameState.phase, (phase) => {
     </div>
 
     <!-- Table surface -->
-    <div class="poker-table__surface">
+    <div class="poker-table__surface" :class="{ 'poker-table__surface--my-turn': isMyTurn && gameState.phase !== 'waiting' && gameState.phase !== 'showdown' }">
       <div class="poker-table__felt">
         <!-- Corner suit decorations -->
         <div class="poker-table__suit-suites">
@@ -194,8 +228,11 @@ watch(() => props.gameState.phase, (phase) => {
         </button>
       </div>
 
-      <div v-if="isMyTurn && gameState.phase !== 'waiting' && gameState.phase !== 'showdown'" class="poker-table__timer">
-        <GameTimerBar :turn-started-at="gameState.turnStartedAt" :duration="gameState.turnTimer" />
+      <div v-if="isMyTurn && gameState.phase !== 'waiting' && gameState.phase !== 'showdown'" class="poker-table__turn-pill" :style="{ background: turnColor.bg, borderColor: turnColor.border, animationDuration: turnPulseSpeed }">
+        <span class="poker-table__turn-pill-text" :style="{ color: turnColor.text }">TU TURNO</span>
+        <span class="poker-table__turn-pill-sep" :style="{ background: turnColor.text }"></span>
+        <Timer :size="13" :style="{ color: turnColor.text }" />
+        <span class="poker-table__turn-pill-time" :style="{ color: turnColor.text }">{{ turnTimeLeft }}s</span>
       </div>
 
       <div v-if="!isMyTurn && gameState.phase !== 'waiting' && gameState.phase !== 'showdown'" class="poker-table__turn-info">
@@ -266,6 +303,60 @@ watch(() => props.gameState.phase, (phase) => {
   justify-content: space-between;
   padding: 12px 16px;
   gap: 8px;
+  position: relative;
+  transition: background 0.5s ease;
+}
+
+.poker-table--my-turn {
+  background: radial-gradient(ellipse at center bottom, rgba(255, 215, 0, 0.07) 0%, rgba(255, 215, 0, 0.02) 40%, transparent 65%);
+}
+
+.poker-table--turn-urgent {
+  animation: bgPulse 1s ease-in-out infinite;
+}
+
+@keyframes bgPulse {
+  0%, 100% {
+    background: radial-gradient(ellipse at center bottom, rgba(255, 215, 0, 0.07) 0%, rgba(255, 215, 0, 0.02) 40%, transparent 65%);
+  }
+  50% {
+    background: radial-gradient(ellipse at center bottom, rgba(239, 68, 68, 0.08) 0%, rgba(239, 68, 68, 0.03) 40%, transparent 65%);
+  }
+}
+
+.poker-table__turn-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border: 1px solid;
+  border-radius: 8px;
+  backdrop-filter: blur(8px);
+  animation: pillPulse 2.5s ease-in-out infinite;
+  transition: background 0.3s, border-color 0.3s;
+}
+
+.poker-table__turn-pill-text {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+.poker-table__turn-pill-sep {
+  width: 1px;
+  height: 12px;
+  opacity: 0.3;
+}
+
+.poker-table__turn-pill-time {
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes pillPulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
 }
 
 .poker-table__opponents {
@@ -280,6 +371,18 @@ watch(() => props.gameState.phase, (phase) => {
   width: 90%;
   max-width: 700px;
   flex-shrink: 1;
+  transition: filter 0.4s ease;
+}
+
+.poker-table__surface--my-turn .poker-table__felt {
+  border-color: #5c3a1a;
+  box-shadow:
+    inset 0 0 60px rgba(0, 0, 0, 0.5),
+    inset 0 0 120px rgba(0, 0, 0, 0.2),
+    inset 0 0 0 1.5px #d4a520,
+    0 0 0 1.5px #d4a520,
+    0 0 20px rgba(0, 0, 0, 0.6),
+    0 0 40px rgba(92, 58, 26, 0.3);
 }
 
 .poker-table__felt {

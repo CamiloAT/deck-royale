@@ -124,6 +124,11 @@ watch(() => props.turnStartedAt, () => {
 }
 .player-seat--active { border-color: #ffd700; box-shadow: 0 0 12px rgba(255, 215, 0, 0.4); }
 .player-seat--myself { background: rgba(0, 100, 0, 0.3); border-color: #00aa00; }
+.player-seat--myself.player-seat--active {
+  border-color: #ffd700;
+  box-shadow: 0 0 16px rgba(255, 215, 0, 0.5), 0 0 32px rgba(255, 215, 0, 0.2);
+  animation: myTurnPulse 2s ease-in-out infinite;
+}
 .player-seat--folded { opacity: 0.5; }
 .player-seat--eliminated { opacity: 0.5; border-color: #666; }
 .player-seat--all-in { border-color: #ff4444; box-shadow: 0 0 12px rgba(255, 68, 68, 0.5); }
@@ -195,6 +200,10 @@ watch(() => props.turnStartedAt, () => {
 }
 
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+@keyframes myTurnPulse {
+  0%, 100% { box-shadow: 0 0 12px rgba(255, 215, 0, 0.35), 0 0 24px rgba(255, 215, 0, 0.15); }
+  50% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.55), 0 0 40px rgba(255, 215, 0, 0.25); }
+}
 @keyframes winnerGlow {
   0% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.6), 0 0 40px rgba(255, 215, 0, 0.3); }
   100% { box-shadow: 0 0 30px rgba(255, 215, 0, 0.8), 0 0 60px rgba(255, 215, 0, 0.4), 0 0 80px rgba(255, 215, 0, 0.2); }
