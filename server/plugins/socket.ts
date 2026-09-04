@@ -13,7 +13,7 @@ import type { GameState } from '../../types/poker'
 let io: Server | null = null
 const showdownTimers = new Map<string, ReturnType<typeof setTimeout>>()
 const playAgainSkips = new Map<string, Set<string>>()
-export const SHOWDOWN_DURATION = 15000
+export const SHOWDOWN_DURATION = 20000
 
 export function defineSocketPlugin() {
   return defineNitroPlugin((nitroApp) => {
@@ -45,7 +45,7 @@ function handleShowdownAndNext(ioRef: Server, roomId: string, game: GameState) {
       if (existingTimer) clearTimeout(existingTimer)
 
       const showdownEndAt = Date.now() + SHOWDOWN_DURATION
-      ioRef.to(roomId).emit('showdown-timer', { endsAt: showdownEndAt })
+      ioRef.to(roomId).emit('showdown-timer', { endsAt: showdownEndAt, total: game.players.length })
 
       const timer = setTimeout(() => {
         showdownTimers.delete(roomId)
@@ -309,16 +309,18 @@ function setupSocketEvents(io: Server) {
             showdownTimers.delete(roomId)
           }
 
-          const game = getGame(roomId)
-          if (game && game.phase === 'showdown') {
-            io!.to(roomId).emit('hand-started', { handNumber: game.handNumber })
-            setTimeout(() => {
-              const newGame = nextHand(roomId)
-              if (newGame) {
-                io!.to(roomId).emit('game-update', newGame)
-              }
-            }, 500)
-          }
+          setTimeout(() => {
+            const game = getGame(roomId)
+            if (game && game.phase === 'showdown') {
+              io!.to(roomId).emit('hand-started', { handNumber: game.handNumber })
+              setTimeout(() => {
+                const newGame = nextHand(roomId)
+                if (newGame) {
+                  io!.to(roomId).emit('game-update', newGame)
+                }
+              }, 500)
+            }
+          }, 1000)
         }
 
         callback({ success: true })

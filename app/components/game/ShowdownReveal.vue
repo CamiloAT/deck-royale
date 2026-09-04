@@ -22,11 +22,11 @@ const showCommunity = ref(false)
 const showPlayers = ref(false)
 const showWinner = ref(false)
 const phase = ref<'in' | 'out'>('in')
-const countdownSeconds = ref(15)
+const countdownSeconds = ref(20)
 const countdownPercent = ref(100)
 let rafId: number | null = null
 let countdownStartTime = 0
-const COUNTDOWN_DURATION = 15000
+const COUNTDOWN_DURATION = 20000
 
 const nonFoldedPlayers = computed(() =>
   props.players.filter(p => !p.folded && p.hand.length > 0)
@@ -286,7 +286,7 @@ function handleSkip() {
           <span v-if="mySkipped">Listo</span>
           <span v-else>Saltar</span>
         </button>
-        <div v-if="skipTotal > 1" class="reveal-skip__status">
+        <div class="reveal-skip__status">
           {{ skipCount }}/{{ skipTotal }} listos
         </div>
       </div>

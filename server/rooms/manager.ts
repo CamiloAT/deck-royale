@@ -881,18 +881,18 @@ export function showdownSkip(roomId: string, playerId: string): { skipped: boole
 
   skips.add(playerId)
 
-  const nonFoldedPlayers = game.players.filter(p => !p.folded)
-  const allSkipped = nonFoldedPlayers.every(p => skips.has(p.id))
+  const allPlayers = game.players
+  const allSkipped = allPlayers.every(p => skips.has(p.id))
 
-  return { skipped: true, allSkipped, count: skips.size, total: nonFoldedPlayers.length }
+  return { skipped: true, allSkipped, count: skips.size, total: allPlayers.length }
 }
 
 export function getShowdownSkips(roomId: string): { count: number; total: number } {
   const game = games.get(roomId)
   if (!game) return { count: 0, total: 0 }
   const skips = showdownSkips.get(roomId)
-  const nonFoldedPlayers = game.players.filter(p => !p.folded)
-  return { count: skips?.size ?? 0, total: nonFoldedPlayers.length }
+  const allPlayers = game.players
+  return { count: skips?.size ?? 0, total: allPlayers.length }
 }
 
 export function resetShowdownSkips(roomId: string): void {

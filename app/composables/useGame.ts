@@ -167,16 +167,12 @@ export function useGame() {
       state.gameOverData = null
       state.showTransition = true
       state.transitionHandNumber = data.handNumber
-      state.showdownTimerEndAt = 0
-      state.showdownSkipCount = 0
-      state.showdownSkipTotal = 0
-      state.mySkippedShowdown = false
     })
 
-    socket.on('showdown-timer', (data: { endsAt: number }) => {
+    socket.on('showdown-timer', (data: { endsAt: number; total?: number }) => {
       state.showdownTimerEndAt = data.endsAt
       state.showdownSkipCount = 0
-      state.showdownSkipTotal = 0
+      state.showdownSkipTotal = data.total ?? 0
       state.mySkippedShowdown = false
     })
 
