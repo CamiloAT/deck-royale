@@ -227,6 +227,17 @@ export function joinRoom(roomId: string, nickname: string, chips: number): { roo
   }
 
   const id = generatePlayerId()
+  const avatarTypes = ['classic', 'female', 'frog', 'penguin'] as const
+  const avatarColorKeys: Record<string, string[]> = {
+    classic: ['blue', 'black', 'white', 'green'],
+    female: ['purple', 'fuchsia', 'red', 'green'],
+    frog: ['green', 'brown', 'fire', 'poison'],
+    penguin: ['orange', 'blue', 'red', 'green'],
+  }
+  const randomType = avatarTypes[Math.floor(Math.random() * avatarTypes.length)]
+  const randomColors = avatarColorKeys[randomType]
+  const randomColor = randomColors[Math.floor(Math.random() * randomColors.length)]
+
   const player: Player = {
     id,
     nickname: finalNickname,
@@ -239,8 +250,8 @@ export function joinRoom(roomId: string, nickname: string, chips: number): { roo
     isDealer: false,
     isTurn: false,
     isConnected: true,
-    avatarType: 'classic',
-    avatarColor: 'blue',
+    avatarType: randomType,
+    avatarColor: randomColor,
   }
 
   room.players.push(player)
