@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Crown, Diamond, Heart, Club, Spade, Clock, LogOut, Flag, HelpCircle, EyeOff, Eye, Timer } from '@lucide/vue'
+import { Crown, Diamond, Heart, Club, Spade, Clock, LogOut, Flag, HelpCircle, EyeOff, Eye, Timer, History, X } from '@lucide/vue'
 import type { GameState } from '../../types/poker'
 
 const props = defineProps<{
@@ -21,6 +21,8 @@ const myPlayer = computed(() =>
 const isHost = computed(() => props.gameState.hostId === props.myPlayerId)
 const canEndGame = computed(() => isHost.value && props.gameState.canEndHand)
 const showEndGameConfirm = ref(false)
+const showHandHistory = ref(false)
+const isMobile = ref(window.innerWidth <= 768)
 const endGameError = ref('')
 
 async function handleEndGame() {
@@ -138,6 +140,11 @@ watch(() => props.gameState.phase, (phase) => {
     <!-- End game button (host only) -->
     <button v-if="canEndGame" class="poker-table__end-game" @click="showEndGameConfirm = true" title="Terminar partida">
       <Flag :size="16" />
+    </button>
+
+    <!-- Hand history button -->
+    <button class="poker-table__history" :class="{ 'poker-table__history--active': showHandHistory }" @click="showHandHistory = !showHandHistory" title="Historial de manos">
+      <History :size="16" />
     </button>
 
     <!-- Leave button -->
@@ -277,6 +284,39 @@ watch(() => props.gameState.phase, (phase) => {
     :turn-started-at="isMyTurn ? gameState.turnStartedAt : undefined"
     :turn-timer="isMyTurn ? gameState.turnTimer : undefined"
     @close="showHelpModal = false"
+  />
+
+  <!-- Hand history side panel (desktop) -->
+  <div class="history-panel" :class="{ 'history-panel--open': showHandHistory }">
+    <div class="history-panel__header">
+      <span class="history-panel__title">Historial #{{ state.handLogHandNumber }}</span>
+      <button class="history-panel__close" @click="showHandHistory = false">
+        <X :size="14" />
+      </button>
+    </div>
+    <div class="history-panel__body">
+      <div v-if="state.handLog.length === 0" class="history-panel__empty">
+        Esperando acciones...
+      </div>
+      <div
+        v-for="(entry, i) in state.handLog"
+        :key="i"
+        class="history-panel__entry"
+      >
+        <span class="history-panel__bullet">•</span>
+        <span class="history-panel__text">{{ entry.message }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hand history modal (mobile) -->
+  <GameHandHistory
+    v-if="showHandHistory && isMobile"
+    :hand-log="state.handLog"
+    :hand-number="state.handLogHandNumber"
+    :turn-started-at="isMyTurn ? gameState.turnStartedAt : undefined"
+    :turn-timer="isMyTurn ? gameState.turnTimer : undefined"
+    @close="showHandHistory = false"
   />
 </template>
 
@@ -550,7 +590,7 @@ watch(() => props.gameState.phase, (phase) => {
 }
 
 .poker-table__end-game {
-  position: fixed; top: 12px; left: 56px; z-index: 100;
+  position: fixed; top: 12px; left: 100px; z-index: 100;
   width: 36px; height: 36px;
   border-radius: 50%;
   background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(255, 215, 0, 0.3);
@@ -578,6 +618,27 @@ watch(() => props.gameState.phase, (phase) => {
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.3);
   color: #fff;
+}
+
+.poker-table__history {
+  position: fixed; top: 12px; left: 56px; z-index: 100;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.5);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all 0.2s;
+  backdrop-filter: blur(8px);
+}
+.poker-table__history:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #fff;
+}
+.poker-table__history--active {
+  background: rgba(255, 215, 0, 0.15);
+  border-color: rgba(255, 215, 0, 0.4);
+  color: #ffd700;
 }
 
 .poker-table__hide-cards {
@@ -675,6 +736,97 @@ watch(() => props.gameState.phase, (phase) => {
   width: 100%;
 }
 
+/* === HAND HISTORY SIDE PANEL === */
+.history-panel {
+  position: fixed;
+  top: 56px;
+  left: 0;
+  width: 280px;
+  max-height: calc(100vh - 70px);
+  background: rgba(10, 15, 25, 0.97);
+  border: 1px solid rgba(255, 215, 0, 0.12);
+  border-left: none;
+  border-top-right-radius: 14px;
+  border-bottom-right-radius: 14px;
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  backdrop-filter: blur(20px);
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.5);
+}
+.history-panel--open {
+  transform: translateX(0);
+}
+.history-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 215, 0, 0.08);
+}
+.history-panel__title {
+  color: #ffd700;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.history-panel__close {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s;
+}
+.history-panel__close:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+.history-panel__body {
+  overflow-y: auto;
+  padding: 10px 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+.history-panel__empty {
+  color: rgba(255, 255, 255, 0.25);
+  font-size: 12px;
+  text-align: center;
+  padding: 24px 0;
+}
+.history-panel__entry {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+.history-panel__entry:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+.history-panel__bullet {
+  color: #ffd700;
+  font-size: 12px;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+.history-panel__text {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
 /* === MOBILE === */
 @media (max-width: 768px) {
   .poker-table {
@@ -710,13 +862,18 @@ watch(() => props.gameState.phase, (phase) => {
     font-size: 10px;
   }
   .poker-table__end-game {
-    top: 6px; left: 42px;
+    top: 6px; left: 78px;
     width: 30px; height: 30px;
   }
   .poker-table__help {
     top: 6px; left: 6px;
     width: 30px; height: 30px;
   }
+  .poker-table__history {
+    top: 6px; left: 42px;
+    width: 30px; height: 30px;
+  }
+  .history-panel { display: none; }
   .poker-table__turn-pill {
     margin-top: 6px;
     margin-bottom: 6px;

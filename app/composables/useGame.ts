@@ -1,5 +1,10 @@
 import type { Room, Player, GameState, Card, GameOverData } from '../types/poker'
 
+export interface HandLogEntry {
+  message: string
+  timestamp: number
+}
+
 interface GameStore {
   room: Room | null
   player: Player | null
@@ -18,6 +23,8 @@ interface GameStore {
   playAgainCount: number
   playAgainTotal: number
   myPlayAgain: boolean
+  handLog: HandLogEntry[]
+  handLogHandNumber: number
 }
 
 const state = reactive<GameStore>({
@@ -38,6 +45,8 @@ const state = reactive<GameStore>({
   playAgainCount: 0,
   playAgainTotal: 0,
   myPlayAgain: false,
+  handLog: [],
+  handLogHandNumber: 0,
 })
 
 const STORAGE_KEY = 'deck-royale-session'
@@ -142,6 +151,8 @@ export function useGame() {
       state.playAgainCount = 0
       state.playAgainTotal = 0
       state.myPlayAgain = false
+      state.handLog = []
+      state.handLogHandNumber = game.handNumber
     })
 
     socket.on('game-update', (game: GameState) => {
@@ -150,6 +161,7 @@ export function useGame() {
 
     socket.on('game-message', (msg: string) => {
       state.message = msg
+      state.handLog.push({ message: msg, timestamp: Date.now() })
       setTimeout(() => {
         if (state.message === msg) state.message = ''
       }, 5000)
@@ -167,6 +179,8 @@ export function useGame() {
       state.gameOverData = null
       state.showTransition = true
       state.transitionHandNumber = data.handNumber
+      state.handLog = []
+      state.handLogHandNumber = data.handNumber
     })
 
     socket.on('showdown-timer', (data: { endsAt: number; total?: number }) => {
