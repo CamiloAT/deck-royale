@@ -26,7 +26,6 @@ export function defineSocketPlugin() {
             cors: { origin: '*', methods: ['GET', 'POST'] },
           })
           setupSocketEvents(io)
-          console.log('[Socket.io] Server attached to HTTP server')
         }
       }
     })
@@ -113,7 +112,6 @@ function setupSocketEvents(io: Server) {
   })
 
   io.on('connection', (socket) => {
-    console.log(`[Socket] Jugador conectado: ${socket.id}`)
 
     socket.on('create-room', (data: any, callback: any) => {
       try {
@@ -444,7 +442,6 @@ function setupSocketEvents(io: Server) {
           startLobbyCleanup(roomId)
         }
       }
-      console.log(`[Socket] Jugador desconectado: ${socket.id}`)
     })
   })
 }

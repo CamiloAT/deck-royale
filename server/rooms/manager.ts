@@ -141,7 +141,6 @@ export function startLobbyCleanup(roomId: string) {
     if (!room || room.started) return
     if (room.players.some(p => p.isConnected)) return
     deleteRoom(roomId)
-    console.log(`[Manager] Sala ${roomId} eliminada por inactividad en lobby`)
   }, LOBBY_CLEANUP_DELAY)
 
   lobbyCleanupTimers.set(roomId, timer)
