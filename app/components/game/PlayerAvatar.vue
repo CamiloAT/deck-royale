@@ -181,11 +181,10 @@ const isPoisonFrog = computed(() => avatarType.value === 'frog' && (props.player
         <g class="avatar__head-group">
           <!-- Frog head - wider -->
           <ellipse class="avatar__head avatar__head--frog" cx="40" cy="22" rx="16" ry="14" />
-          <!-- Frog bump ridges -->
-          <ellipse class="avatar__frog-bump" cx="32" cy="12" rx="5" ry="4" />
-          <ellipse class="avatar__frog-bump" cx="48" cy="12" rx="5" ry="4" />
-          <!-- Frog eyes - big and bulging -->
+          <!-- Frog eyes - big and bulging (bumps + all eye circles together) -->
           <g class="avatar__eyes" :class="{ 'avatar__eyes--dark': isPoisonFrog }">
+            <ellipse class="avatar__frog-bump" cx="32" cy="12" rx="5" ry="4" />
+            <ellipse class="avatar__frog-bump" cx="48" cy="12" rx="5" ry="4" />
             <circle class="avatar__frog-eye-bg" cx="32" cy="14" r="6" />
             <circle class="avatar__frog-eye-bg" cx="48" cy="14" r="6" />
             <circle class="avatar__eye-white" cx="32" cy="14" r="4.5" />
