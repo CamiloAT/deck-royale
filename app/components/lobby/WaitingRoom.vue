@@ -526,8 +526,8 @@ const particles = Array.from({ length: 18 }, (_, i) => {
   transition: all 0.2s;
 }
 .waiting-room__player-avatar :deep(.avatar) {
-  transform: scale(0.55);
-  transform-origin: center center;
+  transform: scale(1.6);
+  transform-origin: center -23%;
 }
 .waiting-room__player-avatar--clickable {
   cursor: pointer;
