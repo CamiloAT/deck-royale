@@ -678,44 +678,57 @@ watch(() => props.gameState.phase, (phase) => {
 /* === MOBILE === */
 @media (max-width: 768px) {
   .poker-table {
-    padding: 8px 10px;
-    gap: 6px;
+    padding: 8px 8px;
+    gap: 4px;
   }
   .poker-table__opponents {
-    gap: 6px;
+    gap: 4px;
   }
   .poker-table__surface {
-    width: 96%;
+    width: 94%;
   }
   .poker-table__felt {
-    aspect-ratio: 1.8 / 1;
-    border-radius: 80px;
-    padding: 14px;
-    gap: 6px;
+    aspect-ratio: 2 / 1;
+    border-radius: 60px;
+    padding: 12px;
+    gap: 4px;
     border-width: 4px;
   }
   .poker-table__brand-title {
-    font-size: 28px;
-    letter-spacing: 8px;
+    font-size: 20px;
+    letter-spacing: 6px;
   }
   .poker-table__crown {
-    width: 24px;
-    height: 24px;
+    width: 18px;
+    height: 18px;
   }
   .poker-table__corner-icon { display: none; }
   .poker-table__my-info {
-    gap: 10px;
+    gap: 8px;
   }
   .poker-table__turn-info {
     font-size: 10px;
   }
   .poker-table__end-game {
-    top: 8px; left: 48px;
-    width: 32px; height: 32px;
+    top: 6px; left: 42px;
+    width: 30px; height: 30px;
   }
   .poker-table__help {
-    top: 8px; left: 8px;
-    width: 32px; height: 32px;
+    top: 6px; left: 6px;
+    width: 30px; height: 30px;
+  }
+  .poker-table__turn-pill {
+    margin-top: 6px;
+    margin-bottom: 6px;
+    padding: 4px 10px;
+    gap: 4px;
+  }
+  .poker-table__turn-pill-text {
+    font-size: 10px;
+    letter-spacing: 1px;
+  }
+  .poker-table__turn-pill-time {
+    font-size: 11px;
   }
 }
 </style>

@@ -222,6 +222,7 @@ watch(() => props.turnStartedAt, () => {
   .player-seat__bet { font-size: 8px; padding: 1px 4px; top: -6px; right: -6px; }
   .player-seat__status { font-size: 8px; }
   .player-seat__status--all-in { font-size: 9px; }
-  .player-seat__turn-indicator { font-size: 8px; }
+  .player-seat__turn-indicator { font-size: 8px; order: -2; }
+  .player-seat__countdown { font-size: 10px; order: -1; margin-bottom: 2px; }
 }
 </style>

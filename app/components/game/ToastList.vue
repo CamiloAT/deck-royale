@@ -74,7 +74,7 @@ const { toasts, dismiss, getStyle } = useToast()
 
 @media (max-width: 768px) {
   .toast-list {
-    top: 80px;
+    top: 180px;
     max-width: 85%;
   }
   .toast-item {
