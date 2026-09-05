@@ -3,13 +3,13 @@ const route = useRoute()
 const roomId = route.params.roomId as string
 
 const { state, connect, joinRoom, leaveRoom, startGame, performAction, requestGameState, rejoinGame } = useGame()
+const { show, showError } = useToast()
 
 connect()
 
 const nickname = ref('')
 const buyIn = ref(2000)
 const joined = ref(false)
-const error = ref('')
 const loading = ref(false)
 const rejoining = ref(false)
 
@@ -18,34 +18,40 @@ onMounted(async () => {
 })
 
 async function handleJoin() {
-  if (!nickname.value) { error.value = 'Ingresa un nickname'; return }
+  if (!nickname.value) { showError('Ingresa un nickname'); return }
   loading.value = true
-  error.value = ''
   const result = await joinRoom({ roomId, nickname: nickname.value, buyIn: buyIn.value })
-  if ('error' in result) error.value = result.error
+  if ('error' in result) showError(result.error)
   else joined.value = true
   loading.value = false
 }
 
 async function handleStart() {
   loading.value = true
-  error.value = ''
   const result = await startGame()
-  if ('error' in result) error.value = result.error
+  if ('error' in result) showError(result.error)
   loading.value = false
 }
 
 async function handleAction(action: string, amount?: number) {
   const result = await performAction(action, amount)
-  if ('error' in result) error.value = result.error
+  if ('error' in result) showError(result.error)
 }
 
-function handleLeave() { leaveRoom(); joined.value = false; error.value = ''; navigateTo('/') }
+function handleLeave() { leaveRoom(); joined.value = false; navigateTo('/') }
+
+let lastMessage = ''
+watch(() => state.message, (msg) => {
+  if (msg && msg !== lastMessage) {
+    show(msg)
+    lastMessage = msg
+  }
+})
 </script>
 
 <template>
   <div class="app">
-    <div v-if="error" class="error-toast" @click="error = ''">{{ error }}</div>
+    <GameToastList />
 
     <div v-if="state.connected === false" class="loading">
       <img :src="'/images/logo.png'" alt="Deck Royale" class="loading__logo" />
@@ -97,8 +103,6 @@ function handleLeave() { leaveRoom(); joined.value = false; error.value = ''; na
         </div>
       </div>
     </template>
-
-    <div v-if="state.message" class="game-message">{{ state.message }}</div>
   </div>
 </template>
 
@@ -142,20 +146,4 @@ function handleLeave() { leaveRoom(); joined.value = false; error.value = ''; na
 .lobby__btn--primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(255, 215, 0, 0.4); }
 .lobby__btn--ghost { background: transparent; color: #888; border: 1px solid rgba(255, 255, 255, 0.1); }
 .lobby__btn--ghost:hover { color: white; border-color: rgba(255, 255, 255, 0.3); }
-
-.error-toast {
-  position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-  background: #cc0000; color: white; padding: 12px 24px; border-radius: 8px;
-  font-size: 14px; cursor: pointer; z-index: 1000; animation: slideDown 0.3s ease-out;
-}
-.game-message {
-  position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.9); color: #ffd700; padding: 12px 24px;
-  border-radius: 8px; font-size: 16px; font-weight: 600; z-index: 1000;
-  animation: slideDown 0.3s ease-out; border: 1px solid rgba(255, 215, 0, 0.3);
-}
-@keyframes slideDown {
-  from { transform: translate(-50%, -100%); opacity: 0; }
-  to { transform: translate(-50%, 0); opacity: 1; }
-}
 </style>
