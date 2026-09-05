@@ -1,7 +1,7 @@
 # Deck Royale
 
-[![Nuxt](https://img.shields.io/badge/Nuxt-4.4.8-00DC82?logo=nuxtdotjs&logoColor=white)](https://nuxt.com/)
-[![Vue](https://img.shields.io/badge/Vue-3.5.38-42b883?logo=vue.js&logoColor=white)](https://vuejs.org/)
+[![Nuxt](https://img.shields.io/badge/Nuxt-4.5.2-00DC82?logo=nuxtdotjs&logoColor=white)](https://nuxt.com/)
+[![Vue](https://img.shields.io/badge/Vue-3.5.35-42b883?logo=vue.js&logoColor=white)](https://vuejs.org/)
 [![Socket.IO](https://img.shields.io/badge/Socket.IO-4.8.3-010101?logo=socket.io&logoColor=white)](https://socket.io/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -12,21 +12,27 @@ Real-time multiplayer Texas Hold'em poker game. Create private rooms, compete ag
 
 ## Main Features
 
-- **Multiplayer Room System** — Create rooms with custom names or join with a code. The host configures blinds, buy-in, and can kick players or end the game. Share a direct link or QR code from mobile.
+- **Multiplayer Room System:** Create rooms with custom names or join with a code. The host configures blinds, buy-in, and can kick players or end the game. Share a direct link or QR code from mobile.
 
-- **Full Texas Hold'em Poker** — Progressive blinds, side pots for multiple all-ins, showdown with dramatic card reveal, and continuous mode with per-hand statistics until only one player remains.
+- **Full Texas Hold'em Poker:** Progressive blinds, side pots for multiple all-ins, showdown with dramatic card reveal, and continuous mode with per-hand statistics until only one player remains.
 
-- **Visual Chip Betting** — Casino chips in 6 denominations (50 to 2,000 COP) with a visual selector, simplified min raise, pure check button, and all-in with flying bills animation.
+- **Visual Chip Betting:** Casino chips in 6 denominations (50 to 2,000 COP) with a visual selector, simplified min raise, pure check button, and all-in with flying bills animation.
 
-- **Animated SVG Avatars** — 3 types (Male, Female, Frog) with an articulated skeleton, CSS animations per action (breathe, blink, check-tap, raise-arm, fold-slump, all-in-push), and customization from the waiting room.
+- **Animated SVG Avatars:** 4 types (Classic, Female, Frog, Penguin) with an articulated skeleton, CSS animations per action (breathe, blink, check-tap, raise-arm, fold-slump, all-in-push), and customization from the waiting room. Random avatar assigned on join.
 
-- **60-Second Turn Timer** — Countdown bar visible to all players with a color semaphore. When time runs out, the connected player auto-folds. 15-second disconnect grace period with no penalty.
+- **60-Second Turn Timer:** Countdown bar visible to all players with a color semaphore. When time runs out, the connected player auto-folds. 15-second disconnect grace period with no penalty.
 
-- **Smart Reconnection** — localStorage persistence: reload the page and resume automatically. Reconnects to an active game or waiting room depending on state. Turn timer pauses and resumes on reconnect.
+- **Smart Reconnection:** localStorage persistence: reload the page and resume automatically. Reconnects to an active game or waiting room depending on state. Turn timer pauses and resumes on reconnect.
 
-- **Responsive Animated Interface** — Mobile and desktop. Entry animations, inter-hand transitions, victory celebration with confetti, and end-game modal with detailed statistics, hand history, and player debts.
+- **Responsive Animated Interface:** Mobile and desktop. Entry animations, inter-hand transitions, victory celebration with confetti, and end-game modal with detailed statistics, hand history, and player debts.
 
-- **Admin Controls Between Hands** — The host can end the game between hands with a flag button, receiving a bet refund. Visual poker hand rankings help modal with illustrated cards.
+- **Live Hand History Panel:** Side panel on desktop and modal on mobile showing every action in real time (fold, check, call, raise, all-in) with Spanish messages. Resets each new hand.
+
+- **Toast Notifications:** Pop-up messages color-coded by action type (fold gray, check blue, call amber, raise orange, all-in red, winner green). Positioned below player seats to avoid covering the table.
+
+- **Private Card Toggle:** Button to hide/show your own cards. Resets hidden each hand. Cards feature a 3D flip animation and premium back design with dot pattern and casino chip.
+
+- **Admin Controls Between Hands:** The host can end the game between hands with a flag button, receiving a bet refund. Visual poker hand rankings help modal with illustrated cards.
 
 ---
 
@@ -56,8 +62,10 @@ cd deck-royale
 ### 2. Install dependencies
 
 ```bash
-npm install
+npm install --legacy-peer-deps
 ```
+
+> **Note:** `--legacy-peer-deps` is required due to a bug in npm 11.x with arborist.
 
 ### 3. Run in development mode
 
@@ -106,15 +114,18 @@ deck-royale/
 │   │   ├── game/                        ← Game table components
 │   │   │   ├── PokerTable.vue           ← Main table layout and orchestration
 │   │   │   ├── PlayerSeat.vue           ← Player seat with avatar and chips
-│   │   │   ├── PlayerAvatar.vue         ← Animated SVG avatar (3 types)
+│   │   │   ├── PlayerAvatar.vue         ← Animated SVG avatar (4 types)
 │   │   │   ├── AvatarPicker.vue         ← Avatar selection modal
 │   │   │   ├── BetControls.vue          ← Chip selector and bet controls
-│   │   │   ├── Card.vue                 ← Poker card visual (52 types)
+│   │   │   ├── Card.vue                 ← Poker card (52 types, 3D flip)
 │   │   │   ├── CommunityCards.vue       ← Community cards with animation
 │   │   │   ├── HandCards.vue            ← Player's hidden hand
 │   │   │   ├── PokerChip.vue            ← Casino chip visual (6 denominations)
 │   │   │   ├── TimerBar.vue             ← Turn countdown bar
 │   │   │   ├── PotDisplay.vue           ← Accumulated pot display
+│   │   │   ├── HandHistory.vue          ← Per-hand action log
+│   │   │   ├── ToastList.vue            ← Toast notification system
+│   │   │   ├── ShowdownReveal.vue       ← Dramatic showdown reveal
 │   │   │   ├── EndModal.vue             ← End-game statistics
 │   │   │   ├── HelpModal.vue            ← Poker hand rankings
 │   │   │   ├── Entry.vue                ← Game entry animation
@@ -130,7 +141,11 @@ deck-royale/
 │   │
 │   ├── composables/                     ← Vue composables
 │   │   ├── useGame.ts                   ← Reactive state, localStorage, auto-rejoin
-│   │   └── useSocket.ts                 ← Socket.IO client singleton
+│   │   ├── useSocket.ts                 ← Socket.IO client singleton
+│   │   └── useToast.ts                  ← Toast system by action type
+│   │
+│   ├── utils/
+│   │   └── avatarColors.ts              ← Color palettes per avatar type
 │   │
 │   ├── pages/                           ← Nuxt page routes
 │   │   ├── index.vue                    ← Main lobby
@@ -162,14 +177,14 @@ deck-royale/
 
 | Layer | Technology |
 |---|---|
-| **Framework** | Nuxt 4.4.8 (SPA mode, Nitro server) |
-| **Frontend** | Vue 3.5.38, Vue Router 5.1, TypeScript 5.8 |
+| **Framework** | Nuxt 4.5.2 (SPA mode, Nitro server) |
+| **Frontend** | Vue 3.5.35, Vue Router 5.1, TypeScript 5.8 |
 | **UI** | Lucide Vue (icons), CSS custom (no UI framework), animated SVG avatars |
 | **Communication** | Socket.IO 4.8.3 (real-time bidirectional) |
 | **Backend** | Node.js via Nitro, server plugins |
 | **Game Logic** | Hand evaluation, side pot algorithm, turn management |
 | **Storage** | In-memory (rooms/game state), localStorage (client session) |
-| **Build** | Vite 7.3, Nitro 2.13 |
+| **Build** | Vite 8.2, Nitro 2.13 |
 
 ---
 
