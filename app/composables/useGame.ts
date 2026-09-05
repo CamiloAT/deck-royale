@@ -316,9 +316,9 @@ export function useGame() {
     })
   }
 
-  function setAvatar(avatarType: string): Promise<{ success: boolean } | { error: string }> {
+  function setAvatar(avatarType: string, avatarColor: string): Promise<{ success: boolean } | { error: string }> {
     return new Promise((resolve) => {
-      socket.emit('set-avatar', { avatarType }, (response: any) => {
+      socket.emit('set-avatar', { avatarType, avatarColor }, (response: any) => {
         resolve(response)
       })
     })

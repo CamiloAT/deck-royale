@@ -240,6 +240,7 @@ export function joinRoom(roomId: string, nickname: string, chips: number): { roo
     isTurn: false,
     isConnected: true,
     avatarType: 'classic',
+    avatarColor: 'blue',
   }
 
   room.players.push(player)

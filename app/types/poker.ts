@@ -42,6 +42,7 @@ export interface Player {
   isTurn: boolean
   isConnected: boolean
   avatarType: 'classic' | 'female' | 'frog' | 'penguin'
+  avatarColor?: string
   lastAction?: string
   hasActed?: boolean
 }

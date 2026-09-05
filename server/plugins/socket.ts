@@ -332,19 +332,20 @@ function setupSocketEvents(io: Server) {
         const { roomId, playerId } = socket.data
         if (!roomId || !playerId) { callback({ error: 'No estas en una sala' }); return }
         const avatarType = data.avatarType
+        const avatarColor = data.avatarColor || 'blue'
         if (!['classic', 'female', 'frog', 'penguin'].includes(avatarType)) { callback({ error: 'Avatar invalido' }); return }
 
         const game = getGame(roomId)
         if (game) {
           const p = game.players.find(p => p.id === playerId)
-          if (p) p.avatarType = avatarType
+          if (p) { p.avatarType = avatarType; p.avatarColor = avatarColor }
           io!.to(roomId).emit('game-update', game)
         }
 
         const room = getRoom(roomId)
         if (room) {
           const rp = room.players.find(p => p.id === playerId)
-          if (rp) rp.avatarType = avatarType
+          if (rp) { rp.avatarType = avatarType; rp.avatarColor = avatarColor }
           io!.to(roomId).emit('room-update', room)
         }
 

@@ -3,6 +3,7 @@ import { createDeck, shuffleDeck } from './deck'
 import { evaluateHand, compareHands } from './hand'
 
 export function initPlayerState(player: Player, index: number, isDealer: boolean): Player {
+  const defaultColors: Record<string, string> = { classic: 'blue', female: 'purple', frog: 'green', penguin: 'orange' }
   return {
     ...player,
     hand: [],
@@ -14,6 +15,7 @@ export function initPlayerState(player: Player, index: number, isDealer: boolean
     isTurn: false,
     hasActed: false,
     avatarType: player.avatarType || 'classic',
+    avatarColor: player.avatarColor || defaultColors[player.avatarType || 'classic'] || 'blue',
   }
 }
 

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
 import type { Player } from '../../types/poker'
+import { getAvatarColorOption } from '../../utils/avatarColors'
 
 const props = defineProps<{
   player: Player
@@ -29,6 +30,18 @@ watch(() => props.player.lastAction, (action) => {
 })
 
 const avatarType = computed(() => props.player.avatarType || 'classic')
+const colorOption = computed(() => getAvatarColorOption(avatarType.value, props.player.avatarColor))
+
+const avatarStyle = computed(() => ({
+  '--avatar-main': colorOption.value.main,
+  '--avatar-light': colorOption.value.light,
+  '--avatar-extra': colorOption.value.extra || colorOption.value.light,
+  '--avatar-bumps': colorOption.value.bumps || colorOption.value.main,
+  '--avatar-spots': colorOption.value.spots || 'transparent',
+  '--avatar-eye': colorOption.value.eyeColor || '',
+}))
+
+const isPoisonFrog = computed(() => avatarType.value === 'frog' && (props.player.avatarColor === 'poison' || props.player.avatarColor === 'fire'))
 </script>
 
 <template>
@@ -43,7 +56,7 @@ const avatarType = computed(() => props.player.avatarType || 'classic')
       },
     ]"
   >
-    <svg viewBox="0 0 80 100" class="avatar__svg" role="img" :aria-label="player.nickname">
+    <svg viewBox="0 0 80 100" class="avatar__svg" role="img" :aria-label="player.nickname" :style="avatarStyle">
       <!-- Glow ring -->
       <circle class="avatar__glow" cx="40" cy="45" r="42" />
 
@@ -146,6 +159,21 @@ const avatarType = computed(() => props.player.avatarType || 'classic')
       <template v-if="avatarType === 'frog'">
         <g class="avatar__body-group">
           <path class="avatar__torso avatar__torso--frog" d="M24,44 C24,38 56,38 56,44 L58,74 C58,77 22,77 22,74 Z" />
+          <!-- Body spots -->
+          <circle class="avatar__frog-spot" cx="29" cy="48" r="1.8" />
+          <circle class="avatar__frog-spot" cx="37" cy="46" r="1.3" />
+          <circle class="avatar__frog-spot" cx="46" cy="49" r="1.6" />
+          <circle class="avatar__frog-spot" cx="52" cy="53" r="1.2" />
+          <circle class="avatar__frog-spot" cx="33" cy="55" r="1.5" />
+          <circle class="avatar__frog-spot" cx="43" cy="57" r="1.1" />
+          <circle class="avatar__frog-spot" cx="27" cy="60" r="1.4" />
+          <circle class="avatar__frog-spot" cx="50" cy="60" r="1.3" />
+          <circle class="avatar__frog-spot" cx="36" cy="64" r="1.6" />
+          <circle class="avatar__frog-spot" cx="47" cy="66" r="1.0" />
+          <circle class="avatar__frog-spot" cx="30" cy="68" r="1.2" />
+          <circle class="avatar__frog-spot" cx="42" cy="70" r="1.1" />
+          <circle class="avatar__frog-spot" cx="53" cy="46" r="0.9" />
+          <circle class="avatar__frog-spot" cx="25" cy="52" r="1.0" />
           <ellipse class="avatar__belly avatar__belly--frog" cx="40" cy="58" rx="11" ry="14" />
           <circle class="avatar__button" cx="40" cy="54" r="1.2" />
           <circle class="avatar__button" cx="40" cy="61" r="1.2" />
@@ -157,7 +185,7 @@ const avatarType = computed(() => props.player.avatarType || 'classic')
           <ellipse class="avatar__frog-bump" cx="32" cy="12" rx="5" ry="4" />
           <ellipse class="avatar__frog-bump" cx="48" cy="12" rx="5" ry="4" />
           <!-- Frog eyes - big and bulging -->
-          <g class="avatar__eyes">
+          <g class="avatar__eyes" :class="{ 'avatar__eyes--dark': isPoisonFrog }">
             <circle class="avatar__frog-eye-bg" cx="32" cy="14" r="6" />
             <circle class="avatar__frog-eye-bg" cx="48" cy="14" r="6" />
             <circle class="avatar__eye-white" cx="32" cy="14" r="4.5" />
@@ -305,19 +333,19 @@ const avatarType = computed(() => props.player.avatarType || 'classic')
 }
 
 /* ===== CLASSIC COLORS ===== */
-.avatar__torso--classic { fill: #1e40af; }
-.avatar__shirt--classic { fill: #3b82f6; }
+.avatar__torso--classic { fill: var(--avatar-main); }
+.avatar__shirt--classic { fill: var(--avatar-light); }
 .avatar__head--classic { fill: #e8b89d; }
 .avatar__hair--classic { fill: #2c3e50; }
 .avatar__ear--classic { fill: #d4a088; }
 .avatar__pupil--classic { fill: #2c3e50; }
 .avatar__eyebrow--classic { stroke: #2c3e50; stroke-width: 1.2; stroke-linecap: round; fill: none; }
-.avatar__arm--classic { stroke: #1e40af; stroke-width: 8; stroke-linecap: round; fill: none; }
+.avatar__arm--classic { stroke: var(--avatar-main); stroke-width: 8; stroke-linecap: round; fill: none; }
 .avatar__hand--classic { fill: #e8b89d; }
 
 /* ===== FEMALE COLORS ===== */
-.avatar__torso--female { fill: #7c3aed; }
-.avatar__shirt--female { fill: #a78bfa; }
+.avatar__torso--female { fill: var(--avatar-main); }
+.avatar__shirt--female { fill: var(--avatar-light); }
 .avatar__head--female { fill: #f0c4a8; }
 .avatar__hair--female { fill: #8b2500; }
 .avatar__hair-side--female-l, .avatar__hair-side--female-r { fill: #8b2500; }
@@ -332,20 +360,27 @@ const avatarType = computed(() => props.player.avatarType || 'classic')
 .avatar__eyebrow--female { stroke: #7a2000; stroke-width: 1; stroke-linecap: round; fill: none; }
 .avatar__eyelash { stroke: #3b1a00; stroke-width: 0.8; stroke-linecap: round; fill: none; }
 .avatar__mouth--female { stroke: #c46060; stroke-width: 1.2; stroke-linecap: round; fill: none; }
-.avatar__arm--female { stroke: #7c3aed; stroke-width: 7; stroke-linecap: round; fill: none; }
+.avatar__arm--female { stroke: var(--avatar-main); stroke-width: 7; stroke-linecap: round; fill: none; }
 .avatar__hand--female { fill: #f0c4a8; }
 
 /* ===== FROG COLORS ===== */
-.avatar__torso--frog { fill: #166534; }
-.avatar__belly--frog { fill: #4ade80; opacity: 0.3; }
-.avatar__head--frog { fill: #22c55e; }
-.avatar__frog-bump { fill: #16a34a; }
+.avatar__torso--frog { fill: var(--avatar-main); }
+.avatar__belly--frog { fill: var(--avatar-extra); opacity: 0.3; }
+.avatar__head--frog { fill: var(--avatar-light); }
+.avatar__frog-bump { fill: var(--avatar-bumps); }
 .avatar__frog-eye-bg { fill: #bbf7d0; }
 .avatar__pupil--frog { fill: #14532d; }
 .avatar__mouth--frog { stroke: #14532d; stroke-width: 1.5; stroke-linecap: round; fill: none; }
-.avatar__frog-nostril { fill: #15803d; }
-.avatar__arm--frog { stroke: #166534; stroke-width: 8; stroke-linecap: round; fill: none; }
-.avatar__hand--frog { fill: #22c55e; }
+.avatar__frog-nostril { fill: var(--avatar-bumps); }
+.avatar__arm--frog { stroke: var(--avatar-main); stroke-width: 8; stroke-linecap: round; fill: none; }
+.avatar__hand--frog { fill: var(--avatar-light); }
+/* Poison/fire frog spots */
+.avatar__frog-spot { fill: var(--avatar-spots); opacity: 0.85; }
+/* Poison/fire frog dark eyes */
+.avatar__eyes--dark .avatar__frog-eye-bg { fill: #1a1a2e; }
+.avatar__eyes--dark .avatar__eye-white { fill: #0a0a0a; }
+.avatar__eyes--dark .avatar__pupil--frog { fill: #000; r: 3; }
+.avatar__eyes--dark .avatar__eye-highlight { fill: rgba(255,255,255,0.7); r: 1.2; }
 
 /* ===== PENGUIN COLORS ===== */
 .avatar__torso--penguin { fill: #3d3d3d; }
@@ -359,9 +394,9 @@ const avatarType = computed(() => props.player.avatarType || 'classic')
 .avatar__arm--penguin { stroke: #3d3d3d; stroke-width: 7; stroke-linecap: round; fill: none; }
 .avatar__hand--penguin { fill: #f59e0b; }
 .avatar__foot--penguin { fill: #f59e0b; }
-.avatar__headphone-band--penguin { stroke: #f59e0b; stroke-width: 3; fill: none; stroke-linecap: round; }
-.avatar__headphone-cup--penguin { fill: #f59e0b; }
-.avatar__headphone-cup-inner--penguin { fill: #e08800; }
+.avatar__headphone-band--penguin { stroke: var(--avatar-main); stroke-width: 3; fill: none; stroke-linecap: round; }
+.avatar__headphone-cup--penguin { fill: var(--avatar-main); }
+.avatar__headphone-cup-inner--penguin { fill: var(--avatar-light); }
 
 /* ===== SHARED STYLES ===== */
 .avatar__torso { transform-origin: 40px 58px; }
@@ -446,7 +481,7 @@ const avatarType = computed(() => props.player.avatarType || 'classic')
 
 /* === KEYFRAMES === */
 @keyframes breathe { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-0.8px); } }
-@keyframes blink { 0%, 90%, 100% { transform: scaleY(1); } 95% { transform: scaleY(0.1); } }
+@keyframes blink { 0%, 88%, 100% { transform: scaleY(1); } 92% { transform: scaleY(0.05); } 95% { transform: scaleY(0.05); } 98% { transform: scaleY(1); } }
 @keyframes tap { 0% { transform: rotate(0deg); } 15% { transform: rotate(-8deg); } 30% { transform: rotate(12deg); } 45% { transform: rotate(0deg); } 60% { transform: rotate(-6deg); } 75% { transform: rotate(10deg); } 100% { transform: rotate(0deg); } }
 @keyframes raiseArmThrow { 0% { transform: rotate(0deg); } 30% { transform: rotate(-45deg); } 60% { transform: rotate(-35deg); } 100% { transform: rotate(-20deg); } }
 @keyframes slump { 0% { transform: translateY(0) scaleY(1); } 30% { transform: translateY(1px) scaleY(0.98) rotate(-2deg); } 100% { transform: translateY(3px) scaleY(0.95) rotate(0deg); } }

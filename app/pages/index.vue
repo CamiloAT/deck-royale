@@ -47,8 +47,8 @@ async function handleUpdateSettings(data: any) {
   if ('error' in result) error.value = result.error
 }
 
-async function handleSelectAvatar(avatarType: string) {
-  await setAvatar(avatarType)
+async function handleSelectAvatar(avatarType: string, avatarColor: string) {
+  await setAvatar(avatarType, avatarColor)
 }
 
 const hostLeft = computed(() => {

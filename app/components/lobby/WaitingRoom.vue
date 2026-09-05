@@ -12,7 +12,7 @@ const emit = defineEmits<{
   (e: 'start'): void
   (e: 'leave'): void
   (e: 'update-settings', data: { smallBlind?: number; bigBlind?: number; minBuyIn?: number }): void
-  (e: 'select-avatar', avatarType: string): void
+  (e: 'select-avatar', avatarType: string, avatarColor: string): void
 }>()
 
 const isHost = computed(() =>
@@ -299,7 +299,7 @@ const particles = Array.from({ length: 18 }, (_, i) => {
     <GameAvatarPicker
       v-if="showAvatarPicker && myPlayer"
       :player="myPlayer"
-      @select="(type) => emit('select-avatar', type)"
+      @select="(type, color) => emit('select-avatar', type, color)"
       @close="showAvatarPicker = false"
     />
   </div>
