@@ -76,6 +76,14 @@ function handleJoin() {
   })
 }
 
+function handleBack() {
+  mode.value = 'menu'
+  roomId.value = ''
+  remoteRoomName.value = ''
+  // Si entraste por un link con ?room=, limpia la query (si no, navigateTo('/') no haría nada)
+  if (route.query.room) navigateTo('/')
+}
+
 const suitComponents = [Spade, Heart, Diamond, Club]
 
 const particles = Array.from({ length: 18 }, (_, i) => {
@@ -212,7 +220,7 @@ const particles = Array.from({ length: 18 }, (_, i) => {
             <ArrowRight :size="18" />
             Unirse
           </button>
-          <button class="lobby__btn lobby__btn--ghost" @click="navigateTo('/')">
+          <button class="lobby__btn lobby__btn--ghost" @click="handleBack">
             <ArrowLeft :size="14" />
             Volver
           </button>
